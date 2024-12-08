@@ -10,11 +10,12 @@ import 'package:flame/text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttris/resources/game_input.dart';
+import 'package:fluttris/resources/game_state.dart';
 import 'package:fluttris/resources/piece.dart';
 import 'package:fluttris/resources/piece_type.dart';
 
-class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDetector {
-  Paint transparentPaint = BasicPalette.transparent.paint();
+class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents {
+  static const double msPerFrame = 16.67;
   Stopwatch globalTimer = Stopwatch();
   Map<PieceType, Sprite> blockTypes = {};
   late Sprite boardBackground;
@@ -29,12 +30,14 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
   int displayFPS = 0;
   int fpsCount = 0;
   int lastPieceDroppedTime = 0;
+  int level = 0;
   int score = 0;
+  int speed = 0;
   int totalLinesCleared = 0;
   bool hasHeldAPiece = false;
-  bool isPlaying = true;
   bool tetrisCleared = false;
   bool tSpin = false;
+  int screenWipeIndex = 19;
   String? statusMessage;
   int lastStatusTime = 0;
   double blockSideLength = 0;
@@ -52,27 +55,51 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
   double scorePositionY = 0;
   double linesClearedPositionX = 0;
   double linesClearedPositionY = 0;
+  double levelClearedPositionX = 0;
+  double levelClearedPositionY = 0;
   double statusPositionX = 0;
   double statusPositionY = 0;
+  int lastWipeTime = 0;
+  late GameState gameState = GameState.start;
   TextPaint reg = TextPaint(style: TextStyle(fontSize: 12, color: BasicPalette.white.color));
+  
+  static Map<int, int> levelsToSpeeds = <int, int>{
+    0: (48 * msPerFrame).toInt(),
+    1: (43 * msPerFrame).toInt(),
+    2: (38 * msPerFrame).toInt(),
+    3: (33 * msPerFrame).toInt(),
+    4: (28 * msPerFrame).toInt(),
+    5: (23 * msPerFrame).toInt(),
+    6: (18 * msPerFrame).toInt(),
+    7: (13 * msPerFrame).toInt(),
+    8: (8 * msPerFrame).toInt(), 
+    9: (6 * msPerFrame).toInt(),
+    10: (5 * msPerFrame).toInt(),
+    11: (5 * msPerFrame).toInt(),
+    12: (5 * msPerFrame).toInt(),
+    13: (4 * msPerFrame).toInt(),
+    14: (4 * msPerFrame).toInt(),
+    15: (4 * msPerFrame).toInt(),
+    16: (3 * msPerFrame).toInt(),
+    17: (3 * msPerFrame).toInt(),
+    18: (3 * msPerFrame).toInt(),
+    19: (2 * msPerFrame).toInt(),
+    20: (2 * msPerFrame).toInt(),
+    21: (2 * msPerFrame).toInt(),
+    22: (2 * msPerFrame).toInt(),
+    23: (2 * msPerFrame).toInt(),
+    24: (2 * msPerFrame).toInt(),
+    25: (2 * msPerFrame).toInt(),
+    26: (2 * msPerFrame).toInt(),
+    27: (2 * msPerFrame).toInt(),
+    28: (2 * msPerFrame).toInt(),
+    29: (msPerFrame).toInt(),
+  };
 
   Tetris() {
     pauseWhenBackgrounded = true;
     globalTimer.start();
-    
-    for (int i = 0; i < 10; i++) {
-      List<PieceType?> row = [];
-      for (int j = 0; j < 20; j++) {
-        row.add(null);
-      }
-      board.add(row);
-    }
-
-    currentPiece = Piece.getPiece();
-    nextPiece = Piece.getPiece();
-    nextPiece1 = Piece.getPiece();
-    nextPiece2 = Piece.getPiece();
-    nextPiece3 = Piece.getPiece();
+    reset();
   }
 
   @override
@@ -92,6 +119,7 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
         PieceType.shadow: Sprite(await Flame.images.load('white.png')),
       }.entries
     );
+    overlays.add(GameState.start.name);
   }
 
   @override
@@ -114,15 +142,17 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
     
     boardBackground.render(canvas, position: Vector2(boardStartingPositionX, boardStartingPositionY), size: Vector2(blockSideLength * 10, blockSideLength * 20));
 
-    int shadowY = getDropShadowYCoord();
-    for (int i = 0; i < 16; i++) {
-      if (currentPiece.getRotationState() & (0x8000 >> i) > 0) {
-        Vector2 pos = Vector2(boardStartingPositionX + (blockSideLength * (currentPiece.x.toDouble() + (i % 4)).toDouble()), boardStartingPositionY + (blockSideLength * (shadowY + (i ~/ 4)).toDouble()));
-        blockTypes[PieceType.shadow]!.render(
-          canvas,
-          position: pos,
-          size: Vector2.all(blockSideLength)
-        );
+    if (gameState == GameState.playing) {
+      int shadowY = getDropShadowYCoord();
+      for (int i = 0; i < 16; i++) {
+        if (currentPiece.getRotationState() & (0x8000 >> i) > 0) {
+          Vector2 pos = Vector2(boardStartingPositionX + (blockSideLength * (currentPiece.x.toDouble() + (i % 4)).toDouble()), boardStartingPositionY + (blockSideLength * (shadowY + (i ~/ 4)).toDouble()));
+          blockTypes[PieceType.shadow]!.render(
+            canvas,
+            position: pos,
+            size: Vector2.all(blockSideLength)
+          );
+        }
       }
     }
     
@@ -140,7 +170,9 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
       }
     }
 
-    drawPiece(boardStartingPositionX + (currentPiece.x * blockSideLength), boardStartingPositionY + (currentPiece.y * blockSideLength), blockSideLength, currentPiece, canvas);
+    if (gameState == GameState.playing) {
+      drawPiece(boardStartingPositionX + (currentPiece.x * blockSideLength), boardStartingPositionY + (currentPiece.y * blockSideLength), blockSideLength, currentPiece, canvas);
+    }
 
     fpsCount++;
     if (globalTimer.elapsedMilliseconds > lastFPSPollTime + 1000) {
@@ -154,6 +186,8 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
     reg.render(canvas, score.toString(), Vector2(scorePositionX, scorePositionY + 15));
     reg.render(canvas, 'Lines Cleared:', Vector2(linesClearedPositionX, linesClearedPositionY));
     reg.render(canvas, totalLinesCleared.toString(), Vector2(linesClearedPositionX, linesClearedPositionY + 15));
+    reg.render(canvas, 'Level:', Vector2(levelClearedPositionX, levelClearedPositionY));
+    reg.render(canvas, level.toString(), Vector2(levelClearedPositionX, levelClearedPositionY + 15));
 
     if (statusMessage != null) {
       reg.render(canvas, statusMessage!, Vector2(statusPositionX, statusPositionY));
@@ -169,40 +203,63 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
   @override
   void update(double dt) {
     super.update(dt);
-
-    if (globalTimer.elapsedMilliseconds > lastPieceDroppedTime + (1000 - (5 * totalLinesCleared))) {
+    if (gameState == GameState.playing) {
+      if (speed == 0) {
+        speed = levelsToSpeeds[min(29, level)]!.toInt();
+      }
+      if (globalTimer.elapsedMilliseconds > lastPieceDroppedTime + speed) {
         down(false);
         lastPieceDroppedTime = globalTimer.elapsedMilliseconds;
       }
+    }
+    else if (gameState == GameState.gameOver ){
+      if (screenWipeIndex >= 0) {
+        
+        if (globalTimer.elapsedMilliseconds > lastWipeTime + 150) {
+          for (int x = 0; x < 10; x++) {
+            board[x][screenWipeIndex] = PieceType.empty;
+          }
+
+          screenWipeIndex--;
+          lastWipeTime = globalTimer.elapsedMilliseconds;
+        }
+      }
+      else {
+        setGameState(GameState.gameOver);
+      }
+    }
+    
   }
 
   @override
   KeyEventResult onKeyEvent(KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
     super.onKeyEvent(event, keysPressed);
 
-    switch (event.character) {
-      case 'w':
-        hardDrop();
-        break;
-      case 'd':
-        moveDirection(GameInput.right);
-        break;
-      case 's':
-        down(true);
-      case 'a':
-        moveDirection(GameInput.left);
-        break;
-      case 'e':
-        hold();
-        break;
-      case '/':
-        rotate(1);
-        break;
-      case '.':
-        rotate(currentPiece.rotations.length - 1);
-      case ',':
-        rotate(2);
-        break;
+    if (gameState == GameState.playing) {
+      switch (event.character) {
+        case 'w':
+          hardDrop();
+          break;
+        case 'd':
+          moveDirection(GameInput.right);
+          break;
+        case 's':
+          down(true);
+        case 'a':
+          moveDirection(GameInput.left);
+          break;
+        case 'e':
+          hold();
+          break;
+        case '/':
+          rotate(1);
+          break;
+        case '.':
+          rotate(currentPiece.rotations.length - 1);
+        case ',':
+          rotate(2);
+          break;
+      }
     }
 
     return KeyEventResult.handled;
@@ -211,6 +268,55 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
   @override
   Color backgroundColor() {
     return Colors.black;
+  }
+
+  void reset() {
+    board.clear();
+    for (int i = 0; i < 10; i++) {
+      List<PieceType?> row = [];
+      for (int j = 0; j < 20; j++) {
+        row.add(null);
+      }
+      board.add(row);
+    }
+    tSpin = false;
+    screenWipeIndex = 19;
+    statusMessage = null;
+    tetrisCleared = false;
+    hasHeldAPiece = false;
+    lastWipeTime = 0;
+    lastStatusTime = 0;
+    lastPieceDroppedTime = 0;
+    lastFPSPollTime = 0;
+    speed = 0;
+    score = 0;
+    level = 0;
+    totalLinesCleared = 0;
+    holdPiece = null;
+    Piece.pieces.clear();
+    currentPiece = Piece.getPiece();
+    nextPiece = Piece.getPiece();
+    nextPiece1 = Piece.getPiece();
+    nextPiece2 = Piece.getPiece();
+    nextPiece3 = Piece.getPiece();
+
+    globalTimer.reset();
+  }
+
+  void setGameState(GameState gs) {
+    gameState = gs;
+
+    switch (gameState) {
+      case GameState.gameOver:
+        overlays.add(GameState.gameOver.name);
+        break;
+      case GameState.playing:
+        overlays.clear();
+        reset();
+        break;
+      case GameState.start:
+        overlays.add(GameState.start.name);
+    }
   }
 
   void setStatus(String status) {
@@ -253,8 +359,11 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
     linesClearedPositionX = 10;
     linesClearedPositionY = scorePositionY + 60;
 
+    levelClearedPositionX = 10;
+    levelClearedPositionY = linesClearedPositionY + 60;
+
     statusPositionX = 10;
-    statusPositionY = linesClearedPositionY + 60;
+    statusPositionY = levelClearedPositionY + 60;
   }
 
   bool moveDirection(GameInput input) {
@@ -326,17 +435,12 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
             board[currentPiece.x + 2][currentPiece.y] != null && 
             board[currentPiece.x][currentPiece.y + 2] != null && 
             board[currentPiece.x + 2][currentPiece.y + 2] != null;
-
-            print('${board[currentPiece.x + 2][currentPiece.y].toString()} ${board[currentPiece.x][currentPiece.y + 2].toString()} ${board[currentPiece.x + 2][currentPiece.y + 2].toString()}');
-            print(tSpin.toString());
         }
         else if (oldRotationState == 3) {
           tSpin = 
             board[currentPiece.x][currentPiece.y] != null && 
             board[currentPiece.x][currentPiece.y + 2] != null && 
             board[currentPiece.x + 2][currentPiece.y + 2] != null;
-            print('${board[currentPiece.x][currentPiece.y].toString()} ${board[currentPiece.x][currentPiece.y + 2].toString()} ${board[currentPiece.x + 2][currentPiece.y + 2].toString()}');
-            print(tSpin.toString());
         }
       }
     }
@@ -405,30 +509,35 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
     }
 
     if (linesCleared > 0) {
-      double multiplier = 1;
-      multiplier *= tSpin ? 2 : 1;
-      multiplier *= (tetrisCleared && linesCleared == 4) ? 2 : 1;
 
       totalLinesCleared += linesCleared;
-      score += (pow(linesCleared, 2) * 100 * multiplier).toInt();
-
-      setStatusAfterLineClear(linesCleared);
+      level = totalLinesCleared ~/ 10;
+      
+      speed = levelsToSpeeds[min(29, level)]!.toInt();
+      setStatusAndScoreAfterLineClear(linesCleared);
 
       tetrisCleared = linesCleared == 4 || (tSpin && linesCleared == 2);
     }
+    else {
+      if (tSpin) {
+        setStatus('T-Spin!');
+      }
+    }
   }
 
-  void setStatusAfterLineClear(int linesCleared) {
-    if (tSpin && linesCleared == 0) {
-      setStatus('T-Spin!');
-    }
-    else if (linesCleared == 1) {
+  void setStatusAndScoreAfterLineClear(int linesCleared) {
+    double multiplier = 1;
+    multiplier *= tSpin ? 12 : 1;
+    multiplier *= (tetrisCleared && linesCleared == 4) ? 2 : 1;
+
+    if (linesCleared == 1) {
       if (tSpin) {
         setStatus('T-Spin Single!');
       }
       else {
         setStatus('Single!');
       }
+      score += (40 * (level + 1) * multiplier).toInt();
     }
     else if (linesCleared == 2) {
       if (tSpin) {
@@ -442,10 +551,11 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
       else {
         setStatus('Double!!');
       }
-      
+      score += (100 * (level + 1) * multiplier).toInt();
     }
     else if (linesCleared == 3) {
       setStatus('Triple!!!');
+      score += (300 * (level + 1) * multiplier).toInt();
     }
     else if (linesCleared == 4) {
       if (tetrisCleared) {
@@ -454,6 +564,7 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
       else {
         setStatus('Tetris!!!!');
       }
+      score += (1200 * (level + 1) * multiplier).toInt();
     }
   }
 
@@ -466,7 +577,9 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
     nextPiece2 = nextPiece3;
     nextPiece3 = Piece.getPiece();
     hasHeldAPiece = false;
-    isPlaying = !checkCollision(currentPiece.x, currentPiece.y);
+    if (checkCollision(currentPiece.x, currentPiece.y)) {
+      gameState = GameState.gameOver;
+    }
   }
 
   void hardDrop() {
