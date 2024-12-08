@@ -128,7 +128,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget getSpaceBox(double sideLength) {
     return SizedBox(
-      height: sideLength,
+      height: sideLength, 
       width: sideLength,
     );
   }
