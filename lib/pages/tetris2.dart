@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:fluttris/resources/game_input.dart';
 import 'package:fluttris/resources/piece.dart';
 
-class Tetris extends StatefulWidget {
-  const Tetris({super.key});
+class Tetris2 extends StatefulWidget {
+  const Tetris2({super.key});
 
   @override
-  State<Tetris> createState() => _TetrisState();
+  State<Tetris2> createState() => _Tetris2State();
 }
 
-class _TetrisState extends State<Tetris> {
+class _Tetris2State extends State<Tetris2> {
   int score = 0;
   int totalLinesCleared = 0;
   bool hasHeldAPiece = false;
@@ -31,7 +31,7 @@ class _TetrisState extends State<Tetris> {
   int fpsCount = 0;
   
 
-  _TetrisState() {
+  _Tetris2State() {
     globalTimer.start();
 
     for (int i = 0; i < 20; i++) {
@@ -120,7 +120,7 @@ class _TetrisState extends State<Tetris> {
     List<Row> rows = [];
 
     for (List<Color> row in board) {
-      rows.add(Row(children: row.map((Color color) => buildBlock(color, boxHeight)).toList()));
+      //rows.add(Row(children: row.map((Color color) => buildBlock(color, boxHeight)).toList()));
     }
 
     return SizedBox(
@@ -138,7 +138,7 @@ class _TetrisState extends State<Tetris> {
       List<Widget> row = [];
       for (int j = 0; j < 4; j++) {
         if (piece != null && piece.rotations[piece.rotationState] & (0x8000 >> (j + (i * 4))) > 0) {
-          row.add(buildBlock(piece.pieceColor, sideLength));
+          //row.add(buildBlock(piece.pieceColor, sideLength));
         }
         else {
           row.add(SizedBox(width: sideLength, height: sideLength));
@@ -258,7 +258,7 @@ class _TetrisState extends State<Tetris> {
     
     while (iterations < 16) {
       if ((currentPiece.getRotationState() & (0x8000 >> iterations)) > 0) {
-        board[currentPiece.y + (iterations % 4)][currentPiece.x + (iterations ~/ 4)] = currentPiece.pieceColor;
+        //board[currentPiece.y + (iterations % 4)][currentPiece.x + (iterations ~/ 4)] = currentPiece.pieceType;
       }
       iterations++;
     }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:fluttris/pages/tetris.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -12,7 +11,7 @@ class HomePage extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            TextButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => Tetris())), child: Text('Play'))
+            //TextButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => Tetris())), child: Text('Play'))
           ],
         ),
       ),

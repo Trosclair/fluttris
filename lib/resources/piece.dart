@@ -1,16 +1,15 @@
 import 'dart:math';
-
-import 'package:flutter/material.dart';
+import 'package:fluttris/resources/piece_type.dart';
 
 class Piece {
   int rotationState = 0;
   int x = 4;
   int y = 0;
   final List<int> rotations;
-  final Color pieceColor;
+  final PieceType pieceType;
   static Random rng = Random();
 
-  Piece({required this.pieceColor, required this.rotations});
+  Piece({required this.pieceType, required this.rotations});
 
   int getRotationState() {
     return rotations[rotationState % rotations.length];
@@ -24,25 +23,33 @@ class Piece {
   static final List<int> z = <int>[0x0C60, 0x2640];
   static final List<int> t = <int>[0x0E40, 0x4C40, 0x4E00, 0x4640];
 
+  static final List<int> pieces = [0, 1, 2, 3, 4, 5, 6];
+
   static Piece getPiece() {
-    int i = rng.nextInt(6);
-    switch(i % 7) {
+    if (pieces.isEmpty) {
+      for (int i = 0; i < 7; i++) {
+        pieces.add(i);
+      }
+    }
+
+    int i = rng.nextInt(pieces.length);
+    switch(pieces.removeAt(i)) {
       case 0:
-        return Piece(pieceColor: Colors.cyan, rotations: Piece.i);
+        return Piece(pieceType: PieceType.i, rotations: Piece.i);
       case 1:
-        return Piece(pieceColor: const Color.fromARGB(255, 2, 82, 219), rotations: Piece.j);
+        return Piece(pieceType: PieceType.j, rotations: Piece.j);
       case 2:
-        return Piece(pieceColor: Colors.orange, rotations: Piece.l);
+        return Piece(pieceType: PieceType.l, rotations: Piece.l);
       case 3:
-        return Piece(pieceColor: Colors.yellow, rotations: Piece.o);
+        return Piece(pieceType: PieceType.o, rotations: Piece.o);
       case 4:
-        return Piece(pieceColor: const Color.fromARGB(255, 6, 156, 11), rotations: Piece.s);
+        return Piece(pieceType: PieceType.s, rotations: Piece.s);
       case 5:
-        return Piece(pieceColor: Colors.deepPurple, rotations: Piece.t);
+        return Piece(pieceType: PieceType.t, rotations: Piece.t);
       case 6:
-        return Piece(pieceColor: Colors.red, rotations: Piece.z);
+        return Piece(pieceType: PieceType.z, rotations: Piece.z);
       default:
-        return Piece(pieceColor: Colors.cyan, rotations: Piece.i);
+        return Piece(pieceType: PieceType.i, rotations: Piece.i);
     }
   }
 }
