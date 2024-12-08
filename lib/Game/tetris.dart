@@ -33,6 +33,10 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
   int totalLinesCleared = 0;
   bool hasHeldAPiece = false;
   bool isPlaying = true;
+  bool tetrisCleared = false;
+  bool tSpin = false;
+  String? statusMessage;
+  int lastStatusTime = 0;
   double blockSideLength = 0;
   double boardStartingPositionX = 0;
   double boardStartingPositionY = 0;
@@ -44,6 +48,12 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
   double nextPiece3PositionY = 0;
   double holdPiecePositionX = 0;
   double holdPiecePositionY = 0;
+  double scorePositionX = 0;
+  double scorePositionY = 0;
+  double linesClearedPositionX = 0;
+  double linesClearedPositionY = 0;
+  double statusPositionX = 0;
+  double statusPositionY = 0;
   TextPaint reg = TextPaint(style: TextStyle(fontSize: 12, color: BasicPalette.white.color));
 
   Tetris() {
@@ -139,8 +149,19 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
         lastFPSPollTime = globalTimer.elapsedMilliseconds;
     }
     
-    canvas.drawRect(Rect.fromLTWH(0, 0, (nextPieceBlockSideLength * 4), 20), BasicPalette.black.paint());
     reg.render(canvas, displayFPS.toString(), Vector2.all(0));
+    reg.render(canvas, 'SCORE:', Vector2(scorePositionX, scorePositionY));
+    reg.render(canvas, score.toString(), Vector2(scorePositionX, scorePositionY + 15));
+    reg.render(canvas, 'Lines Cleared:', Vector2(linesClearedPositionX, linesClearedPositionY));
+    reg.render(canvas, totalLinesCleared.toString(), Vector2(linesClearedPositionX, linesClearedPositionY + 15));
+
+    if (statusMessage != null) {
+      reg.render(canvas, statusMessage!, Vector2(statusPositionX, statusPositionY));
+
+      if (globalTimer.elapsedMilliseconds > lastStatusTime + 3000) {
+        statusMessage = null;
+      }
+    }
 
     super.render(canvas);
   }
@@ -191,6 +212,11 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
   Color backgroundColor() {
     return Colors.black;
   }
+
+  void setStatus(String status) {
+    statusMessage = status;
+    lastStatusTime = globalTimer.elapsedMilliseconds;
+  }
   
   void drawPiece(double piecePositionX, double piecePositionY, double sideLength, Piece piece, Canvas canvas) {
     for (int i = 0; i < 16; i++) {
@@ -220,6 +246,15 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
 
     holdPiecePositionX = 10;
     holdPiecePositionY = boardStartingPositionY + 20;
+
+    scorePositionX = 10;
+    scorePositionY = holdPiecePositionY + (nextPieceBlockSideLength * 4) + 20;
+
+    linesClearedPositionX = 10;
+    linesClearedPositionY = scorePositionY + 60;
+
+    statusPositionX = 10;
+    statusPositionY = linesClearedPositionY + 60;
   }
 
   bool moveDirection(GameInput input) {
@@ -284,6 +319,27 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
     if (checkCollision(currentPiece.x, currentPiece.y)) {
       currentPiece.rotationState = oldRotationState;
     }
+    else {
+      if (currentPiece.pieceType == PieceType.t && currentPiece.rotationState == 0) {
+        if (oldRotationState == 1) {
+          tSpin = 
+            board[currentPiece.x + 2][currentPiece.y] != null && 
+            board[currentPiece.x][currentPiece.y + 2] != null && 
+            board[currentPiece.x + 2][currentPiece.y + 2] != null;
+
+            print('${board[currentPiece.x + 2][currentPiece.y].toString()} ${board[currentPiece.x][currentPiece.y + 2].toString()} ${board[currentPiece.x + 2][currentPiece.y + 2].toString()}');
+            print(tSpin.toString());
+        }
+        else if (oldRotationState == 3) {
+          tSpin = 
+            board[currentPiece.x][currentPiece.y] != null && 
+            board[currentPiece.x][currentPiece.y + 2] != null && 
+            board[currentPiece.x + 2][currentPiece.y + 2] != null;
+            print('${board[currentPiece.x][currentPiece.y].toString()} ${board[currentPiece.x][currentPiece.y + 2].toString()} ${board[currentPiece.x + 2][currentPiece.y + 2].toString()}');
+            print(tSpin.toString());
+        }
+      }
+    }
   }
 
   void hold() {
@@ -306,6 +362,7 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
 
       holdPiece?.x = 4;
       holdPiece?.y = 0;
+      holdPiece?.rotationState = 0;
 
       lastPieceDroppedTime = globalTimer.elapsedMilliseconds;
     }
@@ -348,8 +405,55 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
     }
 
     if (linesCleared > 0) {
+      double multiplier = 1;
+      multiplier *= tSpin ? 2 : 1;
+      multiplier *= (tetrisCleared && linesCleared == 4) ? 2 : 1;
+
       totalLinesCleared += linesCleared;
-      score += (pow(linesCleared, 2) * 100) as int;
+      score += (pow(linesCleared, 2) * 100 * multiplier).toInt();
+
+      setStatusAfterLineClear(linesCleared);
+
+      tetrisCleared = linesCleared == 4 || (tSpin && linesCleared == 2);
+    }
+  }
+
+  void setStatusAfterLineClear(int linesCleared) {
+    if (tSpin && linesCleared == 0) {
+      setStatus('T-Spin!');
+    }
+    else if (linesCleared == 1) {
+      if (tSpin) {
+        setStatus('T-Spin Single!');
+      }
+      else {
+        setStatus('Single!');
+      }
+    }
+    else if (linesCleared == 2) {
+      if (tSpin) {
+        if (tetrisCleared) {
+          setStatus('Back-to-back T-Spin!');
+        }
+        else {
+          setStatus('T-Spin Double!!');
+        }
+      }
+      else {
+        setStatus('Double!!');
+      }
+      
+    }
+    else if (linesCleared == 3) {
+      setStatus('Triple!!!');
+    }
+    else if (linesCleared == 4) {
+      if (tetrisCleared) {
+        setStatus('Back-to-back Tetris!');
+      }
+      else {
+        setStatus('Tetris!!!!');
+      }
     }
   }
 
@@ -370,17 +474,21 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
       score += 10;
     }
     afterDropCollision();
+    tSpin = false;
     lastPieceDroppedTime = globalTimer.elapsedMilliseconds;
   }
 
   void down(bool isHoldingDown) {
-    if (isHoldingDown) {
-      score += 10;
-    }
 
     if (!moveDirection(GameInput.down)) {
       afterDropCollision();
     }
+    else {
+      if (isHoldingDown) {
+        score += 10;
+      }
+    }
+    tSpin = false;
     lastPieceDroppedTime = globalTimer.elapsedMilliseconds;
   }
 }
