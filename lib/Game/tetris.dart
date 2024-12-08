@@ -130,17 +130,23 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents {
 
   @override
   void render(Canvas canvas) {
+    boardBackground.render(canvas, position: Vector2(boardStartingPositionX, boardStartingPositionY), size: Vector2(blockSideLength * 10, blockSideLength * 20));
+
+    drawPieceBox(canvas, nextPiecePositionX, nextPiecePositionY, nextPieceBlockSideLength);
+    drawPieceBox(canvas, nextPiecePositionX, nextPiece1PositionY, nextPieceBlockSideLength * .8);
+    drawPieceBox(canvas, nextPiecePositionX, nextPiece2PositionY, nextPieceBlockSideLength * .8);
+    drawPieceBox(canvas, nextPiecePositionX, nextPiece3PositionY, nextPieceBlockSideLength * .8);
 
     drawPiece(nextPiecePositionX, nextPiecePositionY, nextPieceBlockSideLength, nextPiece, canvas);
     drawPiece(nextPiecePositionX, nextPiece1PositionY, nextPieceBlockSideLength * .8, nextPiece1, canvas);
     drawPiece(nextPiecePositionX, nextPiece2PositionY, nextPieceBlockSideLength * .8, nextPiece2, canvas);
     drawPiece(nextPiecePositionX, nextPiece3PositionY, nextPieceBlockSideLength * .8, nextPiece3, canvas);
 
+    drawPieceBox(canvas, holdPiecePositionX, holdPiecePositionY, nextPieceBlockSideLength);
     if (holdPiece != null) {
       drawPiece(holdPiecePositionX, holdPiecePositionY, nextPieceBlockSideLength, holdPiece!, canvas);
     }
     
-    boardBackground.render(canvas, position: Vector2(boardStartingPositionX, boardStartingPositionY), size: Vector2(blockSideLength * 10, blockSideLength * 20));
 
     if (gameState == GameState.playing) {
       int shadowY = getDropShadowYCoord();
@@ -182,6 +188,9 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents {
     }
     
     reg.render(canvas, displayFPS.toString(), Vector2.all(0));
+
+    canvas.drawRect(Rect.fromLTWH(scorePositionX - 1, scorePositionY - 1, (nextPieceBlockSideLength * 4) + 2, (nextPieceBlockSideLength * 7) + 2), Paint()..color = Colors.blue);
+    canvas.drawRect(Rect.fromLTWH(scorePositionX, scorePositionY, (nextPieceBlockSideLength * 4), (nextPieceBlockSideLength * 7)), Paint()..color = Color(0xFF1C1C84));
     reg.render(canvas, 'SCORE:', Vector2(scorePositionX, scorePositionY));
     reg.render(canvas, score.toString(), Vector2(scorePositionX, scorePositionY + 15));
     reg.render(canvas, 'Lines Cleared:', Vector2(linesClearedPositionX, linesClearedPositionY));
@@ -198,6 +207,11 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents {
     }
 
     super.render(canvas);
+  }
+
+  void drawPieceBox(Canvas canvas, double startX, double startY, double sideLength) {
+    canvas.drawRect(Rect.fromLTWH(startX - 1, startY - 1, (sideLength * 4) + 2, (sideLength * 4) + 2), Paint()..color = Colors.blue);
+    canvas.drawRect(Rect.fromLTWH(startX, startY, (sideLength * 4), (sideLength * 4)), Paint()..color = Color(0xFF1C1C84));
   }
   
   @override
@@ -343,7 +357,7 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents {
     boardStartingPositionY = 0;
 
     nextPiecePositionX = boardStartingPositionX + (blockSideLength * 10) + 10;
-    nextPiecePositionY = boardStartingPositionY + 10;
+    nextPiecePositionY = boardStartingPositionY + 20;
     nextPieceBlockSideLength = blockSideLength * .7;
 
     nextPiece1PositionY = nextPiecePositionY + (nextPieceBlockSideLength * 4) + 20;

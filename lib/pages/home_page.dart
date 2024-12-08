@@ -139,7 +139,7 @@ class _HomePageState extends State<HomePage> {
       width: sideLength,
       child: HoldDownButton(
         onHoldDown: onPressed,
-        child: IconButton(onPressed: onPressed, icon: icon)
+        child: CircleAvatar(backgroundColor: Color(0xFF1C1C84), child: IconButton(onPressed: onPressed, icon: icon))
       )
     );
   }
