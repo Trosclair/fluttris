@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
+import 'package:flame/extensions.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:flame/palette.dart';
@@ -32,6 +33,17 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
   int totalLinesCleared = 0;
   bool hasHeldAPiece = false;
   bool isPlaying = true;
+  double blockSideLength = 0;
+  double boardStartingPositionX = 0;
+  double boardStartingPositionY = 0;
+  double nextPiecePositionX = 0;
+  double nextPiecePositionY = 0;
+  double nextPieceBlockSideLength = 0;
+  double nextPiece1PositionY = 0;
+  double nextPiece2PositionY = 0;
+  double nextPiece3PositionY = 0;
+  double holdPiecePositionX = 0;
+  double holdPiecePositionY = 0;
   TextPaint reg = TextPaint(style: TextStyle(fontSize: 12, color: BasicPalette.white.color));
 
   Tetris() {
@@ -56,6 +68,7 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
   @override
   FutureOr<void> onLoad() async {
     await super.onLoad();
+    setSizes();
     boardBackground = Sprite(await Flame.images.load('board_background.png'));
     blockTypes.addEntries(<PieceType, Sprite>{
         PieceType.empty: Sprite(await Flame.images.load('black.png')),
@@ -72,11 +85,22 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
   }
 
   @override
+  void onGameResize(Vector2 size) {
+    super.onGameResize(size);
+    setSizes();
+  }
+
+  @override
   void render(Canvas canvas) {
-    
-    double blockSideLength = (size.y) / 20;
-    double boardStartingPositionX = (size.x / 2) - (blockSideLength * 5);
-    double boardStartingPositionY = 0;
+
+    drawPiece(nextPiecePositionX, nextPiecePositionY, nextPieceBlockSideLength, nextPiece, canvas);
+    drawPiece(nextPiecePositionX, nextPiece1PositionY, nextPieceBlockSideLength * .8, nextPiece1, canvas);
+    drawPiece(nextPiecePositionX, nextPiece2PositionY, nextPieceBlockSideLength * .8, nextPiece2, canvas);
+    drawPiece(nextPiecePositionX, nextPiece3PositionY, nextPieceBlockSideLength * .8, nextPiece3, canvas);
+
+    if (holdPiece != null) {
+      drawPiece(holdPiecePositionX, holdPiecePositionY, nextPieceBlockSideLength, holdPiece!, canvas);
+    }
     
     boardBackground.render(canvas, position: Vector2(boardStartingPositionX, boardStartingPositionY), size: Vector2(blockSideLength * 10, blockSideLength * 20));
 
@@ -106,17 +130,7 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
       }
     }
 
-    for (int i = 0; i < 16; i++) {
-      if (currentPiece.getRotationState() & (0x8000 >> i) > 0) {
-        Vector2 pos = Vector2(boardStartingPositionX + (blockSideLength * (currentPiece.x.toDouble() + (i % 4)).toDouble()), boardStartingPositionY + (blockSideLength * (currentPiece.y + (i ~/ 4)).toDouble()));
-        blockTypes[currentPiece.pieceType]!.render(
-          canvas,
-          position: pos,
-          size: Vector2.all(blockSideLength)
-        );
-      }
-    }
-
+    drawPiece(boardStartingPositionX + (currentPiece.x * blockSideLength), boardStartingPositionY + (currentPiece.y * blockSideLength), blockSideLength, currentPiece, canvas);
 
     fpsCount++;
     if (globalTimer.elapsedMilliseconds > lastFPSPollTime + 1000) {
@@ -151,12 +165,65 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
   KeyEventResult onKeyEvent(KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
     super.onKeyEvent(event, keysPressed);
 
+    switch (event.character) {
+      case 'w':
+        hardDrop();
+        break;
+      case 'd':
+        moveDirection(GameInput.right);
+        break;
+      case 's':
+        down(true);
+      case 'a':
+        moveDirection(GameInput.left);
+        break;
+      case 'e':
+        hold();
+        break;
+      case '/':
+        rotateClockwise();
+        break;
+      case '.':
+        rotateCounterClockwise();
+        break;
+    }
+
     return KeyEventResult.handled;
   }
 
   @override
   Color backgroundColor() {
     return Colors.black;
+  }
+  
+  void drawPiece(double piecePositionX, double piecePositionY, double sideLength, Piece piece, Canvas canvas) {
+    for (int i = 0; i < 16; i++) {
+      if (piece.getRotationState() & (0x8000 >> i) > 0) {
+        Vector2 pos = Vector2(piecePositionX + (sideLength * (i % 4).toDouble()), piecePositionY + (sideLength * (i ~/ 4).toDouble()));
+        blockTypes[piece.pieceType]!.render(
+          canvas,
+          position: pos,
+          size: Vector2.all(sideLength)
+        );
+      }
+    }
+  }
+
+  void setSizes() {
+    blockSideLength = (size.y) / 20;
+    boardStartingPositionX = (size.x / 2) - (blockSideLength * 5);
+    boardStartingPositionY = 0;
+
+    nextPiecePositionX = boardStartingPositionX + (blockSideLength * 10) + 20;
+    nextPiecePositionY = boardStartingPositionY + 20;
+    nextPieceBlockSideLength = blockSideLength * .7;
+
+    nextPiece1PositionY = nextPiecePositionY + (nextPieceBlockSideLength * 4) + 20;
+    nextPiece2PositionY = nextPiecePositionY + (nextPieceBlockSideLength * 4 + (nextPieceBlockSideLength * 4 * .8)) + 20;
+    nextPiece3PositionY = nextPiecePositionY + (nextPieceBlockSideLength * 4 + (nextPieceBlockSideLength * 8* .8)) + 20;
+
+    holdPiecePositionX = boardStartingPositionX - (blockSideLength * 4) - 20;
+    holdPiecePositionY = boardStartingPositionY + 20;
   }
 
   bool moveDirection(GameInput input) {
@@ -214,7 +281,7 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
     return y - 1;
   }
 
-  void rotateLeft() {
+  void rotateCounterClockwise() {
     int oldRotationState = currentPiece.rotationState;
     currentPiece.rotationState = (currentPiece.rotationState + currentPiece.rotations.length - 1) % currentPiece.rotations.length;
 
@@ -223,7 +290,7 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
     }
   }
 
-  void rotateRight() {
+  void rotateClockwise() {
     int oldRotationState = currentPiece.rotationState;
     currentPiece.rotationState = (currentPiece.rotationState + 1) % currentPiece.rotations.length;
 
@@ -273,13 +340,14 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
       for (int x = 0; x < 10; x++) {
         board[x][y] = (y == 0) ? null : board[x][y - 1];
       }
-    } while (y != 0);
+      y--;
+    } while (y >= 0);
   }
 
   void removeLines() {
     int linesCleared = 0;
 
-    for (int y = 19; y > 0; y--) {
+    for (int y = 19; y >= 0; y--) {
       bool isLineComplete = true;
       for (int x = 0; x < 10; x++) {
         isLineComplete &= !(board[x][y] == null);
@@ -288,6 +356,7 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
       if (isLineComplete) {
         removeLine(y);
         linesCleared++;
+        y++;            //run it back!
       }
     }
 
