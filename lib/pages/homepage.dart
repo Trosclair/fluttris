@@ -1,5 +1,5 @@
 import 'dart:math';
-
+import 'package:hold_down_button/hold_down_button.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttris/Game/tetris.dart';
@@ -134,7 +134,10 @@ class HomePage extends StatelessWidget {
     return SizedBox(
       height: sideLength,
       width: sideLength,
-      child: IconButton(onPressed: onPressed, icon: icon)
+      child: HoldDownButton(
+        onHoldDown: onPressed,
+        child: IconButton(onPressed: onPressed, icon: icon)
+      )
     );
   }
 }
