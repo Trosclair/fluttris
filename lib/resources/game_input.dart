@@ -5,6 +5,6 @@ enum GameInput {
     hardDrop,
     rotateRight,
     rotateLeft,
-    hold,
-    start
+    flip,
+    hold
 }

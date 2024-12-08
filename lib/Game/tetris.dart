@@ -139,7 +139,7 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
         lastFPSPollTime = globalTimer.elapsedMilliseconds;
     }
     
-    canvas.drawRect(Rect.fromLTWH(0, 0, 100, 20), BasicPalette.black.paint());
+    canvas.drawRect(Rect.fromLTWH(0, 0, (nextPieceBlockSideLength * 4), 20), BasicPalette.black.paint());
     reg.render(canvas, displayFPS.toString(), Vector2.all(0));
 
     super.render(canvas);
@@ -153,12 +153,6 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
         down(false);
         lastPieceDroppedTime = globalTimer.elapsedMilliseconds;
       }
-  }
-
-  @override
-  void onTap() {
-    super.onTap();
-
   }
 
   @override
@@ -181,10 +175,12 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
         hold();
         break;
       case '/':
-        rotateClockwise();
+        rotate(1);
         break;
       case '.':
-        rotateCounterClockwise();
+        rotate(currentPiece.rotations.length - 1);
+      case ',':
+        rotate(2);
         break;
     }
 
@@ -214,15 +210,15 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
     boardStartingPositionX = (size.x / 2) - (blockSideLength * 5);
     boardStartingPositionY = 0;
 
-    nextPiecePositionX = boardStartingPositionX + (blockSideLength * 10) + 20;
-    nextPiecePositionY = boardStartingPositionY + 20;
+    nextPiecePositionX = boardStartingPositionX + (blockSideLength * 10) + 10;
+    nextPiecePositionY = boardStartingPositionY + 10;
     nextPieceBlockSideLength = blockSideLength * .7;
 
     nextPiece1PositionY = nextPiecePositionY + (nextPieceBlockSideLength * 4) + 20;
-    nextPiece2PositionY = nextPiecePositionY + (nextPieceBlockSideLength * 4 + (nextPieceBlockSideLength * 4 * .8)) + 20;
-    nextPiece3PositionY = nextPiecePositionY + (nextPieceBlockSideLength * 4 + (nextPieceBlockSideLength * 8* .8)) + 20;
+    nextPiece2PositionY = nextPiecePositionY + (nextPieceBlockSideLength * 4 + (nextPieceBlockSideLength * 4 * .8)) + 40;
+    nextPiece3PositionY = nextPiecePositionY + (nextPieceBlockSideLength * 4 + (nextPieceBlockSideLength * 8* .8)) + 60;
 
-    holdPiecePositionX = boardStartingPositionX - (blockSideLength * 4) - 20;
+    holdPiecePositionX = 10;
     holdPiecePositionY = boardStartingPositionY + 20;
   }
 
@@ -281,18 +277,9 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
     return y - 1;
   }
 
-  void rotateCounterClockwise() {
+  void rotate(int rotationStateMutation) {
     int oldRotationState = currentPiece.rotationState;
-    currentPiece.rotationState = (currentPiece.rotationState + currentPiece.rotations.length - 1) % currentPiece.rotations.length;
-
-    if (checkCollision(currentPiece.x, currentPiece.y)) {
-      currentPiece.rotationState = oldRotationState;
-    }
-  }
-
-  void rotateClockwise() {
-    int oldRotationState = currentPiece.rotationState;
-    currentPiece.rotationState = (currentPiece.rotationState + 1) % currentPiece.rotations.length;
+    currentPiece.rotationState = (currentPiece.rotationState + rotationStateMutation) % currentPiece.rotations.length;
 
     if (checkCollision(currentPiece.x, currentPiece.y)) {
       currentPiece.rotationState = oldRotationState;
@@ -383,6 +370,7 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
       score += 10;
     }
     afterDropCollision();
+    lastPieceDroppedTime = globalTimer.elapsedMilliseconds;
   }
 
   void down(bool isHoldingDown) {
@@ -393,5 +381,6 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents, TapDe
     if (!moveDirection(GameInput.down)) {
       afterDropCollision();
     }
+    lastPieceDroppedTime = globalTimer.elapsedMilliseconds;
   }
 }
