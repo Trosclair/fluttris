@@ -189,8 +189,8 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents {
     
     reg.render(canvas, displayFPS.toString(), Vector2.all(0));
 
-    canvas.drawRect(Rect.fromLTWH(scorePositionX - 1, scorePositionY - 1, (nextPieceBlockSideLength * 4) + 2, (nextPieceBlockSideLength * 7) + 2), Paint()..color = Colors.blue);
-    canvas.drawRect(Rect.fromLTWH(scorePositionX, scorePositionY, (nextPieceBlockSideLength * 4), (nextPieceBlockSideLength * 7)), Paint()..color = Color(0xFF1C1C84));
+    canvas.drawRect(Rect.fromLTWH(scorePositionX - 1, scorePositionY - 1, (nextPieceBlockSideLength * 4) + 2, scorePositionY + 72), Paint()..color = Colors.blue);
+    canvas.drawRect(Rect.fromLTWH(scorePositionX, scorePositionY, (nextPieceBlockSideLength * 4), scorePositionY + 70), Paint()..color = Color(0xFF1C1C84));
     reg.render(canvas, 'SCORE:', Vector2(scorePositionX, scorePositionY));
     reg.render(canvas, score.toString(), Vector2(scorePositionX, scorePositionY + 15));
     reg.render(canvas, 'Lines:', Vector2(linesClearedPositionX, linesClearedPositionY));
