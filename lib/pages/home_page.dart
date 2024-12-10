@@ -4,7 +4,6 @@ import 'package:hold_down_button/hold_down_button.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttris/Game/tetris.dart';
-import 'package:fluttris/resources/game_input.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -59,9 +58,9 @@ class _HomePageState extends State<HomePage> {
                         ),
                         Row(
                           children: [
-                            getIconButtonBox(dpadButtonSideLength, () { if (tetris.gameState == GameState.playing) tetris.moveDirection(GameInput.left); }, Icon(Icons.arrow_left, color: Colors.white, size: 60)),
+                            getIconButtonBox(dpadButtonSideLength, () { if (tetris.gameState == GameState.playing) tetris.moveLeft(); }, Icon(Icons.arrow_left, color: Colors.white, size: 60)),
                             getSpaceBox(dpadButtonSideLength),
-                            getIconButtonBox(dpadButtonSideLength, () { if (tetris.gameState == GameState.playing) tetris.moveDirection(GameInput.right); }, Icon(Icons.arrow_right, color: Colors.white, size: 60))
+                            getIconButtonBox(dpadButtonSideLength, () { if (tetris.gameState == GameState.playing) tetris.moveRight(); }, Icon(Icons.arrow_right, color: Colors.white, size: 60))
                           ],
                         ),
                         Row(
