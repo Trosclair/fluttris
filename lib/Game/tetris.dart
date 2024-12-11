@@ -247,6 +247,7 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents {
           break;
         case 's':
           down(true);
+          break;
         case 'a':
           moveLeft();
           break;
@@ -258,6 +259,7 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents {
           break;
         case '.':
           rotate(currentPiece.rotations.length - 1);
+          break;
         case ',':
           rotate(2);
           break;
