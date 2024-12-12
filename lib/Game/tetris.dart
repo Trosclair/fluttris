@@ -61,8 +61,9 @@ class Tetris extends FlameGame with HasPerformanceTracker {
   GameState gameState = GameState.playing;
   TextPaint reg = TextPaint(style: TextStyle(fontSize: 12, color: BasicPalette.white.color));
   final GameControls gameControls;
+  final int seedLevel;
 
-  Tetris({required this.gameControls}) {
+  Tetris({required this.gameControls, required this.seedLevel}) {
     gameControls.down = down;
     gameControls.rotate = rotate;
     gameControls.pause = () {};
@@ -270,7 +271,7 @@ class Tetris extends FlameGame with HasPerformanceTracker {
     lastFPSPollTime = 0;
     speed = 0;
     score = 0;
-    level = 0;
+    level = seedLevel;
     totalLinesCleared = 0;
     holdPiece = null;
     Piece.pieces.clear(); // clear this to get rid of stale pieces.
@@ -506,7 +507,7 @@ class Tetris extends FlameGame with HasPerformanceTracker {
     if (linesCleared > 0) {
 
       totalLinesCleared += linesCleared;
-      level = totalLinesCleared ~/ 10;
+      level = max(totalLinesCleared ~/ 10, seedLevel);
       
       // Reset the speed to what the level's is.
       speed = Level.levelsToSpeeds[min(29, level)]!.toInt();

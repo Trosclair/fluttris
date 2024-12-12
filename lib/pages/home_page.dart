@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluttris/game/tetris.dart';
 import 'package:fluttris/pages/game_page.dart';
+import 'package:fluttris/pages/level_select_page.dart';
 import 'package:fluttris/pages/options_page.dart';
 import 'package:fluttris/resources/game_controls.dart';
 import 'package:fluttris/resources/options.dart';
@@ -24,9 +25,9 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            getMainWindowButton('Quick Game', () { Navigator.push(context, MaterialPageRoute(builder: (context) => GamePage(tetris: Tetris(gameControls: GameControls(options: widget.options))), settings: RouteSettings(name: GamePage.routeName))); }),
+            getMainWindowButton('Quick Game', () { Navigator.push(context, MaterialPageRoute(builder: (context) => GamePage(tetris: Tetris(gameControls: GameControls(options: widget.options), seedLevel: 0)), settings: RouteSettings(name: GamePage.routeName))); }),
             getSpaceBox(),
-            getMainWindowButton('Level Select', () {}),
+            getMainWindowButton('Level Select', () { Navigator.push(context, MaterialPageRoute(builder: (context) => LevelSelectPage(options: widget.options), settings: RouteSettings(name: LevelSelectPage.routeName))); }),
             getSpaceBox(),
             getMainWindowButton('Multiplayer', () {}),
             getSpaceBox(),

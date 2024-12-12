@@ -22,7 +22,7 @@ class PausePage extends StatelessWidget {
             getSpaceBox(),
             getMainWindowButton('Options', () { Navigator.push(context, MaterialPageRoute(builder: (context) => OptionsPage(options: options), settings: RouteSettings(name: OptionsPage.routeName))); }),
             getSpaceBox(),
-            getMainWindowButton('Quit', () { Navigator.popUntil(context, (Route<dynamic> x)  { print(x.settings.name); return x.settings.name == HomePage.routeName; } ); }),
+            getMainWindowButton('Quit', () { Navigator.popUntil(context, (Route<dynamic> x) => x.settings.name == HomePage.routeName); }),
           ],
         ),
       ),

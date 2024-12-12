@@ -63,11 +63,6 @@ class GameControls {
   void checkForKeyPresses(GameState gameState, Piece currentPiece) {
     Iterable<int> keysPressed = HardwareKeyboard.instance.physicalKeysPressed.map((x) => x.usbHidUsage);
 
-    if (keysPressed.isEmpty)
-    {
-      return;
-    }
-
     isResetPressed = keysPressed.where((int x) => x == options.resetBind.key.usbHidUsage).isNotEmpty;
     isRightPressed = keysPressed.where((int x) => x == options.moveRightBind.key.usbHidUsage).isNotEmpty;
     isLeftPressed = keysPressed.where((int x) => x == options.moveLeftBind.key.usbHidUsage).isNotEmpty;
