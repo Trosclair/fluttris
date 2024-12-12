@@ -203,6 +203,9 @@ class Tetris extends FlameGame with HasPerformanceTracker {
   @override
   void update(double dt) {
     super.update(dt);
+    
+    gameControls.checkForKeyPresses(gameState, currentPiece);
+
     if (gameState == GameState.playing) {
 
       // During startup there wasn't a good place for this, because I eventually want the user to select levels...
@@ -215,8 +218,6 @@ class Tetris extends FlameGame with HasPerformanceTracker {
         down(false);
         lastPieceDroppedTime = globalTimer.elapsedMilliseconds;
       }
-
-      gameControls.checkForKeyPresses(gameState, currentPiece);
 
     }
     else if (gameState == GameState.gameOver) {
@@ -284,6 +285,7 @@ class Tetris extends FlameGame with HasPerformanceTracker {
 
     // Reset the timer as well since I reset the time variables.
     globalTimer.reset();
+    gameState = GameState.playing;
   }
 
   /// Setter function for the status messages.
