@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:fluttris/game/tetris.dart';
+import 'package:fluttris/pages/game_page.dart';
 import 'package:fluttris/pages/options_page.dart';
+import 'package:fluttris/resources/game_controls.dart';
 import 'package:fluttris/resources/options.dart';
 
 class HomePage extends StatefulWidget {
@@ -20,7 +23,7 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            getMainWindowButton('Quick Game', () {}),
+            getMainWindowButton('Quick Game', () { Navigator.push(context, MaterialPageRoute(builder: (context) => GamePage(tetris: Tetris(gameControls: GameControls(options: widget.options)),))); }),
             getSpaceBox(),
             getMainWindowButton('Level Select', () {}),
             getSpaceBox(),

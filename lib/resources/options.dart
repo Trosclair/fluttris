@@ -1,8 +1,9 @@
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
+import 'package:flame/palette.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-import 'package:fluttris/resources/controls.dart';
+import 'package:fluttris/resources/control_type.dart';
 import 'package:fluttris/resources/key_bind.dart';
 import 'package:fluttris/resources/preferences.dart';
 
@@ -18,17 +19,39 @@ class Options extends Game with KeyboardEvents {
   String displayName = '';
   String userID = '';
 
-  Options();
+  BuildContext? context;
+  Function(PhysicalKeyboardKey)? onKeyPress;
+  TextPaint reg = TextPaint(style: TextStyle(fontSize: 12, color: BasicPalette.white.color));
+  
+  late KeyBind rotateRightBind;
+  late KeyBind rotateLeftBind;
+  late KeyBind flipBind;
+  late KeyBind moveRightBind;
+  late KeyBind moveLeftBind;
+  late KeyBind dropBind;
+  late KeyBind hardDropBind;
+  late KeyBind holdBind;
+  late KeyBind pauseBind;
+  late KeyBind resetBind;
 
   @override
   KeyEventResult onKeyEvent(KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
     super.onKeyEvent(event, keysPressed);
 
+    if (onKeyPress != null && context != null) {
+      onKeyPress?.call(event.physicalKey);
+      Navigator.pop(context!);
+    }
+
     return KeyEventResult.handled;
   }
   
   @override
-  void render(Canvas canvas) { }
+  void render(Canvas canvas) {
+    if (context != null) {
+      reg.render(canvas, 'Press a Key...', Vector2(MediaQuery.sizeOf(context!).width / 2, MediaQuery.sizeOf(context!).height / 2));
+    }
+  }
   
   @override
   void update(double dt) { }
@@ -38,8 +61,40 @@ class Options extends Game with KeyboardEvents {
 
     options.areTouchControlsInverted = (await Preferences.getPreferences()).getBool('areTouchControlsInverted') ?? false;
     
-    for (Controls c in Controls.values) {
-      options.keyboardBinds.add(await KeyBind.getKeyBind(c));
+    for (ControlType c in ControlType.values) {
+      KeyBind kb = await KeyBind.getKeyBind(c);
+      options.keyboardBinds.add(kb);
+      switch (kb.control) {
+        case ControlType.drop:
+          options.dropBind = kb;
+          break;
+        case ControlType.hardDrop:
+          options.hardDropBind = kb;
+          break;
+        case ControlType.reset:
+          options.resetBind = kb;
+          break;
+        case ControlType.pause:
+          options.pauseBind = kb;
+          break;
+        case ControlType.rotateLeft:
+          options.rotateLeftBind = kb;
+          break;
+        case ControlType.rotateRight:
+          options.rotateRightBind = kb;
+          break;
+        case ControlType.moveLeft:
+          options.moveLeftBind = kb;
+          break;
+        case ControlType.moveRight:
+          options.moveRightBind = kb;
+          break;
+        case ControlType.flip:
+          options.flipBind = kb;
+          break;
+        case ControlType.hold:
+          options.holdBind = kb;
+      }
     }
 
     options.displayName = (await Preferences.getPreferences()).getString('displayName') ?? '';

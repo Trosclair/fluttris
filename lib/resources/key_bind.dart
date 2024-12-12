@@ -1,28 +1,28 @@
 import 'package:flutter/services.dart';
-import 'package:fluttris/resources/controls.dart';
+import 'package:fluttris/resources/control_type.dart';
 import 'package:fluttris/resources/preferences.dart';
 
 class KeyBind {
-  final Controls control;
+  final ControlType control;
   bool isPollingKeyPress = false;
   PhysicalKeyboardKey key;
 
-  static Map<Controls, PhysicalKeyboardKey> defaultKeys = {
-    Controls.drop: PhysicalKeyboardKey.keyS,
-    Controls.flip: PhysicalKeyboardKey.comma,
-    Controls.moveLeft: PhysicalKeyboardKey.keyA,
-    Controls.moveRight: PhysicalKeyboardKey.keyD,
-    Controls.pause: PhysicalKeyboardKey.escape,
-    Controls.reset: PhysicalKeyboardKey.f5,
-    Controls.hardDrop: PhysicalKeyboardKey.keyW,
-    Controls.hold: PhysicalKeyboardKey.keyE,
-    Controls.rotateLeft: PhysicalKeyboardKey.period,
-    Controls.rotateRight: PhysicalKeyboardKey.slash
+  static Map<ControlType, PhysicalKeyboardKey> defaultKeys = {
+    ControlType.drop: PhysicalKeyboardKey.keyS,
+    ControlType.flip: PhysicalKeyboardKey.comma,
+    ControlType.moveLeft: PhysicalKeyboardKey.keyA,
+    ControlType.moveRight: PhysicalKeyboardKey.keyD,
+    ControlType.pause: PhysicalKeyboardKey.escape,
+    ControlType.reset: PhysicalKeyboardKey.f5,
+    ControlType.hardDrop: PhysicalKeyboardKey.keyW,
+    ControlType.hold: PhysicalKeyboardKey.keyE,
+    ControlType.rotateLeft: PhysicalKeyboardKey.period,
+    ControlType.rotateRight: PhysicalKeyboardKey.slash
   };
 
   KeyBind({required this.control, required this.key});
 
-  static Future<KeyBind> getKeyBind(Controls control) async {
+  static Future<KeyBind> getKeyBind(ControlType control) async {
     int? keyCode = (await Preferences.getPreferences()).getInt(control.name);
     
     if (keyCode != null) {

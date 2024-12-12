@@ -1,5 +1,4 @@
 import 'dart:math';
-
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttris/game/tetris.dart';
@@ -7,9 +6,9 @@ import 'package:fluttris/resources/game_state.dart';
 import 'package:hold_down_button/hold_down_button.dart';
 
 class GamePage extends StatelessWidget {
-  final Tetris tetris = Tetris();
+  final Tetris tetris;
 
-  GamePage({super.key});
+  GamePage({super.key, required this.tetris});
 
   @override
   Widget build(BuildContext context) {
@@ -32,89 +31,97 @@ class GamePage extends StatelessWidget {
         color: Colors.black,
         child: Row(
           children: [
-            Container(
-              width: sideWidth,
-              height: height,
-              color: Colors.black,
-              child: Container(
-                height: sideWidth,
-                alignment: Alignment.bottomCenter,
-                child: 
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Row(
-                        children: [
-                          getSpaceBox(dpadButtonSideLength),
-                          getIconButtonBox(dpadButtonSideLength, () { if (tetris.gameState == GameState.playing) tetris.hardDrop(); }, Icon(Icons.arrow_upward, color: Colors.white, size: 60)),
-                          getSpaceBox(dpadButtonSideLength)
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          getIconButtonBox(dpadButtonSideLength, () { if (tetris.gameState == GameState.playing) tetris.moveLeft(); }, Icon(Icons.arrow_left, color: Colors.white, size: 60)),
-                          getSpaceBox(dpadButtonSideLength),
-                          getIconButtonBox(dpadButtonSideLength, () { if (tetris.gameState == GameState.playing) tetris.moveRight(); }, Icon(Icons.arrow_right, color: Colors.white, size: 60))
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          getSpaceBox(dpadButtonSideLength),
-                          getIconButtonBox(dpadButtonSideLength, () { if (tetris.gameState == GameState.playing) tetris.down(true); }, Icon(Icons.arrow_downward, color: Colors.white, size: 60)),
-                          getSpaceBox(dpadButtonSideLength)
-                        ],
-                      )
-                    ],
-                  )
-                ,
-              ),
-            ),
+            tetris.gameControls.options.areTouchControlsInverted ? getMovementControls(sideWidth, height, dpadButtonSideLength) : getRotationControls(sideWidth, height, dpadButtonSideLength),
             SizedBox(
               width: gameWidth,
               height: height,
               child: GameWidget(game: tetris)
             ),
-            Container(
-              width: sideWidth,
-              height: height,
-              color: Colors.black,
-              child: Container(
-                height: sideWidth,
-                alignment: Alignment.bottomCenter,
-                child: 
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Row(
-                        children: [
-                          getSpaceBox(dpadButtonSideLength),
-                          getIconButtonBox(dpadButtonSideLength, () { if (tetris.gameState == GameState.playing) tetris.hold(); }, Icon(Icons.download, color: Colors.white, size: 60)),
-                          getSpaceBox(dpadButtonSideLength)
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          getIconButtonBox(dpadButtonSideLength, () { if (tetris.gameState == GameState.playing) tetris.rotate(tetris.currentPiece.rotations.length - 1); }, Icon(Icons.rotate_left, color: Colors.white, size: 60)),
-                          getSpaceBox(dpadButtonSideLength),
-                          getIconButtonBox(dpadButtonSideLength, () { if (tetris.gameState == GameState.playing) tetris.rotate(1); }, Icon(Icons.rotate_right, color: Colors.white, size: 60))
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          getSpaceBox(dpadButtonSideLength),
-                          getIconButtonBox(dpadButtonSideLength, () { if (tetris.gameState == GameState.playing) tetris.rotate(2); }, Icon(Icons.flip, color: Colors.white, size: 60)),
-                          getSpaceBox(dpadButtonSideLength)
-                        ],
-                      )
-                    ],
-                  )
-                ,
-              ),
-            )
+            tetris.gameControls.options.areTouchControlsInverted ? getRotationControls(sideWidth, height, dpadButtonSideLength) : getMovementControls(sideWidth, height, dpadButtonSideLength)
           ],
         ),
+      ),
+    );
+  }
+
+  Widget getRotationControls(double sideWidth, double height, double dpadButtonSideLength) {
+    return Container(
+      width: sideWidth,
+      height: height,
+      color: Colors.black,
+      child: Container(
+        height: sideWidth,
+        alignment: Alignment.bottomCenter,
+        child: 
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Row(
+                children: [
+                  getSpaceBox(dpadButtonSideLength),
+                  getIconButtonBox(dpadButtonSideLength, () { if (tetris.gameState == GameState.playing) tetris.hold(); }, Icon(Icons.download, color: Colors.white, size: 60)),
+                  getSpaceBox(dpadButtonSideLength)
+                ],
+              ),
+              Row(
+                children: [
+                  getIconButtonBox(dpadButtonSideLength, () { if (tetris.gameState == GameState.playing) tetris.rotate(tetris.currentPiece.rotations.length - 1); }, Icon(Icons.rotate_left, color: Colors.white, size: 60)),
+                  getSpaceBox(dpadButtonSideLength),
+                  getIconButtonBox(dpadButtonSideLength, () { if (tetris.gameState == GameState.playing) tetris.rotate(1); }, Icon(Icons.rotate_right, color: Colors.white, size: 60))
+                ],
+              ),
+              Row(
+                children: [
+                  getSpaceBox(dpadButtonSideLength),
+                  getIconButtonBox(dpadButtonSideLength, () { if (tetris.gameState == GameState.playing) tetris.rotate(2); }, Icon(Icons.flip, color: Colors.white, size: 60)),
+                  getSpaceBox(dpadButtonSideLength)
+                ],
+              )
+            ],
+          )
+        ,
+      ),
+    );
+  }
+
+  Widget getMovementControls(double sideWidth, double height, double dpadButtonSideLength) {
+    return Container(
+      width: sideWidth,
+      height: height,
+      color: Colors.black,
+      child: Container(
+        height: sideWidth,
+        alignment: Alignment.bottomCenter,
+        child: 
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Row(
+                children: [
+                  getSpaceBox(dpadButtonSideLength),
+                  getIconButtonBox(dpadButtonSideLength, () { if (tetris.gameState == GameState.playing) tetris.hardDrop(); }, Icon(Icons.arrow_upward, color: Colors.white, size: 60)),
+                  getSpaceBox(dpadButtonSideLength)
+                ],
+              ),
+              Row(
+                children: [
+                  getIconButtonBox(dpadButtonSideLength, () { if (tetris.gameState == GameState.playing) tetris.moveLeft(); }, Icon(Icons.arrow_left, color: Colors.white, size: 60)),
+                  getSpaceBox(dpadButtonSideLength),
+                  getIconButtonBox(dpadButtonSideLength, () { if (tetris.gameState == GameState.playing) tetris.moveRight(); }, Icon(Icons.arrow_right, color: Colors.white, size: 60))
+                ],
+              ),
+              Row(
+                children: [
+                  getSpaceBox(dpadButtonSideLength),
+                  getIconButtonBox(dpadButtonSideLength, () { if (tetris.gameState == GameState.playing) tetris.down(true); }, Icon(Icons.arrow_downward, color: Colors.white, size: 60)),
+                  getSpaceBox(dpadButtonSideLength)
+                ],
+              )
+            ],
+          )
+        ,
       ),
     );
   }

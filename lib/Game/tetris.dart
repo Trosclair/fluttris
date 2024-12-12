@@ -1,20 +1,19 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flame/components.dart';
-import 'package:flame/events.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:flame/palette.dart';
 import 'package:flame/text.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:fluttris/resources/game_controls.dart';
 import 'package:fluttris/resources/game_state.dart';
 import 'package:fluttris/resources/level.dart';
 import 'package:fluttris/resources/piece.dart';
 import 'package:fluttris/resources/piece_type.dart';
 
-class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents {
+class Tetris extends FlameGame with HasPerformanceTracker {
   Stopwatch globalTimer = Stopwatch();
   Map<PieceType, Sprite> blockTypes = {};
   late Sprite boardBackground;
@@ -59,11 +58,20 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents {
   double statusPositionX = 0;
   double statusPositionY = 0;
   int lastWipeTime = 0;
-  late GameState gameState = GameState.start;
+  GameState gameState = GameState.playing;
   TextPaint reg = TextPaint(style: TextStyle(fontSize: 12, color: BasicPalette.white.color));
+  final GameControls gameControls;
 
+  Tetris({required this.gameControls}) {
+    gameControls.down = down;
+    gameControls.rotate = rotate;
+    gameControls.pause = () {};
+    gameControls.hold = hold;
+    gameControls.moveLeft = moveLeft;
+    gameControls.moveRight = moveRight;
+    gameControls.hardDrop = hardDrop;
+    gameControls.reset = reset;
 
-  Tetris() {
     globalTimer.start();
     reset();
   }
@@ -86,8 +94,6 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents {
         PieceType.shadow: Sprite(await Flame.images.load('white.png')),
       }.entries
     );
-    // add the start overlay.
-    overlays.add(GameState.start.name);
   }
 
   @override
@@ -209,8 +215,11 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents {
         down(false);
         lastPieceDroppedTime = globalTimer.elapsedMilliseconds;
       }
+
+      gameControls.checkForKeyPresses(gameState, currentPiece);
+
     }
-    else if (gameState == GameState.gameOver ){
+    else if (gameState == GameState.gameOver) {
       if (screenWipeIndex >= 0) { // while we are still not at the top of the board...
         
         // Every 150ms add a row of black blocks to the board.
@@ -224,49 +233,13 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents {
           lastWipeTime = globalTimer.elapsedMilliseconds;
         }
       }
+      else if (gameState == GameState.results) {
+
+      }
       else { // animation finished, so call setGameState to refresh the overlays.
-        setGameState(GameState.gameOver);
+        gameState = GameState.results;
       }
     }
-    
-  }
-
-  @override
-  // I learned today that not everyone is left handed... At somepoint I need to change this to where right handers can play comfortably.
-  // TODO: add a button remapping function that persists between app launches.
-  KeyEventResult onKeyEvent(KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
-    super.onKeyEvent(event, keysPressed);
-
-    if (gameState == GameState.playing) {
-      switch (event.character) {
-        case 'w':
-          hardDrop();
-          break;
-        case 'd':
-          moveRight();
-          break;
-        case 's':
-          down(true);
-          break;
-        case 'a':
-          moveLeft();
-          break;
-        case 'e':
-          hold();
-          break;
-        case '/':
-          rotate(1);
-          break;
-        case '.':
-          rotate(currentPiece.rotations.length - 1);
-          break;
-        case ',':
-          rotate(2);
-          break;
-      }
-    }
-
-    return KeyEventResult.handled;
   }
 
   @override
@@ -311,23 +284,6 @@ class Tetris extends FlameGame with HasPerformanceTracker, KeyboardEvents {
 
     // Reset the timer as well since I reset the time variables.
     globalTimer.reset();
-  }
-
-  /// setter function for gameState that manages the overlays that popup.
-  void setGameState(GameState gs) {
-    gameState = gs;
-
-    switch (gameState) {
-      case GameState.gameOver:
-        overlays.add(GameState.gameOver.name);
-        break;
-      case GameState.playing:
-        overlays.clear();
-        reset();
-        break;
-      case GameState.start:
-        overlays.add(GameState.start.name);
-    }
   }
 
   /// Setter function for the status messages.
