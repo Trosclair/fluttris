@@ -36,8 +36,6 @@ class Tetris extends FlameGame with HasPerformanceTracker {
   bool tetrisCleared = false;
   bool tSpin = false;
   int screenWipeIndex = 19;
-  String? statusMessage;
-  int lastStatusTime = 0;
   double blockSideLength = 0;
   double boardStartingPositionX = 0;
   double boardStartingPositionY = 0;
@@ -181,16 +179,6 @@ class Tetris extends FlameGame with HasPerformanceTracker {
     reg.render(canvas, 'Level:', Vector2(levelClearedPositionX, levelClearedPositionY));
     reg.render(canvas, level.toString(), Vector2(levelClearedPositionX, levelClearedPositionY + 15));
 
-    // If there is a status message, then go ahead and draw it!
-    if (statusMessage != null) {
-      reg.render(canvas, statusMessage!, Vector2(statusPositionX, statusPositionY));
-
-      // clear the message after 3 sec.
-      if (globalTimer.elapsedMilliseconds > lastStatusTime + 3000) {
-        statusMessage = null;
-      }
-    }
-
     super.render(canvas);
   }
 
@@ -264,11 +252,9 @@ class Tetris extends FlameGame with HasPerformanceTracker {
     // reset important state information.
     tSpin = false;
     screenWipeIndex = 19;
-    statusMessage = null;
     tetrisCleared = false;
     hasHeldAPiece = false;
     lastWipeTime = 0;
-    lastStatusTime = 0;
     lastPieceDroppedTime = 0;
     lastFPSPollTime = 0;
     speed = 0;
@@ -286,12 +272,6 @@ class Tetris extends FlameGame with HasPerformanceTracker {
     // Reset the timer as well since I reset the time variables.
     globalTimer.reset();
     gameState = GameState.playing;
-  }
-
-  /// Setter function for the status messages.
-  void setStatus(String status) {
-    statusMessage = status;
-    lastStatusTime = globalTimer.elapsedMilliseconds;
   }
   
   /// Draw the piece given at the coords given.
@@ -526,11 +506,6 @@ class Tetris extends FlameGame with HasPerformanceTracker {
       // if 4 lines are cleared at once or if we have a T-Spin double set the bonus points bool to true;
       tetrisCleared = linesCleared == 4 || (tSpin && linesCleared == 2);
     }
-    else { // no lines cleared, but look for a T-Spin. This doesn't earn points, but nothing compares the dopamine rush of getting a T-Spin!
-      if (tSpin) {
-        setStatus('T-Spin!');
-      }
-    }
   }
 
   // Set the status and the score if we've cleared line(s).
@@ -540,39 +515,15 @@ class Tetris extends FlameGame with HasPerformanceTracker {
     multiplier *= (tetrisCleared && linesCleared == 4) ? 2 : 1;
 
     if (linesCleared == 1) {
-      if (tSpin) {
-        setStatus('T-Spin Single!');
-      }
-      else {
-        setStatus('Single!');
-      }
       score += (40 * (level + 1) * multiplier).toInt();
     }
     else if (linesCleared == 2) {
-      if (tSpin) {
-        if (tetrisCleared) {
-          setStatus('Back-to-back T-Spin!');
-        }
-        else {
-          setStatus('T-Spin Double!!');
-        }
-      }
-      else {
-        setStatus('Double!!');
-      }
       score += (100 * (level + 1) * multiplier).toInt();
     }
     else if (linesCleared == 3) {
-      setStatus('Triple!!!');
       score += (300 * (level + 1) * multiplier).toInt();
     }
     else if (linesCleared == 4) {
-      if (tetrisCleared) {
-        setStatus('Back-to-back Tetris!');
-      }
-      else {
-        setStatus('Tetris!!!!');
-      }
       score += (1200 * (level + 1) * multiplier).toInt();
     }
   }
