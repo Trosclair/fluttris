@@ -7,6 +7,7 @@ import 'package:flame/game.dart';
 import 'package:flame/palette.dart';
 import 'package:flame/text.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttris/pages/pause_page.dart';
 import 'package:fluttris/resources/game_controls.dart';
 import 'package:fluttris/resources/game_state.dart';
 import 'package:fluttris/resources/level.dart';
@@ -14,6 +15,7 @@ import 'package:fluttris/resources/piece.dart';
 import 'package:fluttris/resources/piece_type.dart';
 
 class Tetris extends FlameGame with HasPerformanceTracker {
+  late BuildContext context;
   Stopwatch globalTimer = Stopwatch();
   Map<PieceType, Sprite> blockTypes = {};
   late Sprite boardBackground;
@@ -69,6 +71,7 @@ class Tetris extends FlameGame with HasPerformanceTracker {
     gameControls.moveRight = moveRight;
     gameControls.hardDrop = hardDrop;
     gameControls.reset = reset;
+    gameControls.pause = pause;
 
     globalTimer.start();
     reset();
@@ -181,12 +184,6 @@ class Tetris extends FlameGame with HasPerformanceTracker {
 
     super.render(canvas);
   }
-
-  /// draws the backing box for the hold and next pieces.
-  void drawPieceBox(Canvas canvas, double startX, double startY, double sideLength) {
-    canvas.drawRect(Rect.fromLTWH(startX - 1, startY - 1, (sideLength * 4) + 2, (sideLength * 4) + 2), Paint()..color = Colors.blue);
-    canvas.drawRect(Rect.fromLTWH(startX, startY, (sideLength * 4), (sideLength * 4)), Paint()..color = Color(0xFF1C1C84));
-  }
   
   @override
   void update(double dt) {
@@ -225,6 +222,9 @@ class Tetris extends FlameGame with HasPerformanceTracker {
       else if (gameState == GameState.results) {
 
       }
+      else if (gameState == GameState.pause) {
+
+      }
       else { // animation finished, so call setGameState to refresh the overlays.
         gameState = GameState.results;
       }
@@ -234,6 +234,17 @@ class Tetris extends FlameGame with HasPerformanceTracker {
   @override
   Color backgroundColor() {
     return Colors.black;
+  }
+
+  void pause() {
+    gameState = GameState.pause;
+    Navigator.push(context, MaterialPageRoute(builder: (context) => PausePage(options: gameControls.options, resume: () { gameState = GameState.playing; }), settings: RouteSettings(name: PausePage.routeName)));
+  }
+
+  /// draws the backing box for the hold and next pieces.
+  void drawPieceBox(Canvas canvas, double startX, double startY, double sideLength) {
+    canvas.drawRect(Rect.fromLTWH(startX - 1, startY - 1, (sideLength * 4) + 2, (sideLength * 4) + 2), Paint()..color = Colors.blue);
+    canvas.drawRect(Rect.fromLTWH(startX, startY, (sideLength * 4), (sideLength * 4)), Paint()..color = Color(0xFF1C1C84));
   }
 
   // Reset the game, so the user can play a new round.
@@ -273,7 +284,7 @@ class Tetris extends FlameGame with HasPerformanceTracker {
     globalTimer.reset();
     gameState = GameState.playing;
   }
-  
+
   /// Draw the piece given at the coords given.
   void drawPiece(double piecePositionX, double piecePositionY, double sideLength, Piece piece, Canvas canvas) {
     for (int i = 0; i < 16; i++) {

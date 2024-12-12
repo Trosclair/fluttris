@@ -6,9 +6,10 @@ import 'package:fluttris/resources/game_state.dart';
 import 'package:hold_down_button/hold_down_button.dart';
 
 class GamePage extends StatelessWidget {
+  static final String routeName = 'gamePage';
   final Tetris tetris;
 
-  GamePage({super.key, required this.tetris});
+  const GamePage({super.key, required this.tetris});
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +25,8 @@ class GamePage extends StatelessWidget {
 
     double dpadButtonSideLength = (sideWidth / 3);
     
+    tetris.context = context;
+
     return Scaffold(
       body: Container(
         height: height,

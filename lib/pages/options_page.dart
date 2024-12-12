@@ -5,6 +5,7 @@ import 'package:fluttris/resources/key_bind.dart';
 import 'package:fluttris/resources/options.dart';
 
 class OptionsPage extends StatefulWidget {
+  static final String routeName = 'optionsPage';
   final Options options;
 
   const OptionsPage({super.key, required this.options});
@@ -126,7 +127,7 @@ class _OptionsPageState extends State<OptionsPage> {
       }); 
       widget.options.onKeyPress = null; 
     };
-    Navigator.push(context, MaterialPageRoute(builder: (context) => BindKeyPage(options: widget.options)));
+    Navigator.push(context, MaterialPageRoute(builder: (context) => BindKeyPage(options: widget.options), settings: RouteSettings(name: BindKeyPage.routeName)));
   }
 
   Widget getColoredText(String text) {

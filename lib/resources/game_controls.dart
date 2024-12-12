@@ -42,7 +42,6 @@ class GameControls {
   bool wasResetPressedLastTime = false;
   bool wasHoldPressedLastTime = false;
   bool wasHardDropPressedLastTime = false;
-  bool wasPausePressedLastTime = false;
 
   int lastKeyPressed = 0;
   Stopwatch globalTimer = Stopwatch();
@@ -78,6 +77,7 @@ class GameControls {
     isHardDropPressed = keysPressed.where((int x) => x == options.hardDropBind.key.usbHidUsage).isNotEmpty;
     isHoldPressed = keysPressed.where((int x) => x == options.holdBind.key.usbHidUsage).isNotEmpty;
     isDownPressed = keysPressed.where((int x) => x == options.dropBind.key.usbHidUsage).isNotEmpty;
+    isPausedPressed = keysPressed.where((int x) => x == options.pauseBind.key.usbHidUsage).isNotEmpty;
     
     if (!wasResetPressedLastTime && isResetPressed) {
       reset();
@@ -99,9 +99,8 @@ class GameControls {
         return;
       }
 
-      if (!wasPausePressedLastTime && isPausedPressed) {
+      if (isPausedPressed) {
         pause();
-        wasPausePressedLastTime = true;
         return;
       }
       

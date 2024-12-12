@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttris/resources/options.dart';
 
 class BindKeyPage extends StatelessWidget {
+  static final String routeName = 'bindKeyPage';
   final Options options;
 
   const BindKeyPage({super.key, required this.options});

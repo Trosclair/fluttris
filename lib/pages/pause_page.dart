@@ -1,20 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:fluttris/game/tetris.dart';
-import 'package:fluttris/pages/game_page.dart';
+import 'package:fluttris/pages/home_page.dart';
 import 'package:fluttris/pages/options_page.dart';
-import 'package:fluttris/resources/game_controls.dart';
 import 'package:fluttris/resources/options.dart';
 
-class HomePage extends StatefulWidget {
-  static final String routeName = '/';
+class PausePage extends StatelessWidget {
+  static final String routeName = 'pausePage';
   final Options options;
-  const HomePage({super.key, required this.options});
+  final Function resume;
 
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
+  const PausePage({super.key, required this.options, required this.resume});
 
   @override
   Widget build(BuildContext context) {
@@ -24,13 +18,11 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            getMainWindowButton('Quick Game', () { Navigator.push(context, MaterialPageRoute(builder: (context) => GamePage(tetris: Tetris(gameControls: GameControls(options: widget.options))), settings: RouteSettings(name: GamePage.routeName))); }),
+            getMainWindowButton('Resume', () { resume(); Navigator.pop(context); }),
             getSpaceBox(),
-            getMainWindowButton('Level Select', () {}),
+            getMainWindowButton('Options', () { Navigator.push(context, MaterialPageRoute(builder: (context) => OptionsPage(options: options), settings: RouteSettings(name: OptionsPage.routeName))); }),
             getSpaceBox(),
-            getMainWindowButton('Multiplayer', () {}),
-            getSpaceBox(),
-            getMainWindowButton('Options', () { Navigator.push(context, MaterialPageRoute(builder: (context) => OptionsPage(options: widget.options), settings: RouteSettings(name: OptionsPage.routeName))); }),
+            getMainWindowButton('Quit', () { Navigator.popUntil(context, (Route<dynamic> x)  { print(x.settings.name); return x.settings.name == HomePage.routeName; } ); }),
           ],
         ),
       ),
