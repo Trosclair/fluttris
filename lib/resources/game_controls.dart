@@ -93,7 +93,6 @@ class GameControls {
     }
     
     if (HomePage.globalTimer.elapsedMilliseconds > _dasLeftRightPollingTime + _dasLeftRightVelocityTime || (!_wasRightPressedLastTime && _isRightPressed) || (!_wasLeftPressedLastTime && _isLeftPressed)) {
-      print(HomePage.globalTimer.isRunning);
       if (_isRightPressed) {
         moveRight();
         _dasLeftRightVelocityTime -= _dasAccelerationTime;
