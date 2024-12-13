@@ -5,6 +5,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttris/pages/home_page.dart';
 import 'package:fluttris/pages/pause_page.dart';
+import 'package:fluttris/pages/results_page.dart';
 import 'package:fluttris/resources/control_type.dart';
 import 'package:fluttris/resources/game_controls.dart';
 import 'package:fluttris/resources/game_renderer.dart';
@@ -131,12 +132,12 @@ class Tetris extends FlameGame with HasPerformanceTracker {
         }
         else { // animation finished, so call setGameState to refresh the overlays.
           _gameState = GameState.results;
+          Navigator.push(context, MaterialPageRoute(builder: (context) => ResultsPage(stats: stats, reset: _reset)));
         }
         break;
       case GameState.pause:
         break;
       case GameState.results:
-
         break;
       case GameState.start:
         break;

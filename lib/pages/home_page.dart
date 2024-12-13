@@ -12,7 +12,6 @@ class HomePage extends StatelessWidget {
   final Options options;
 
   HomePage({super.key, required this.options}) { globalTimer.start(); }
-
   
   @override
   Widget build(BuildContext context) {
@@ -22,26 +21,26 @@ class HomePage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            getMainWindowButton('Quick Game', () { Navigator.push(context, MaterialPageRoute(builder: (context) => GamePage(tetris: Tetris(gameControls: GameControls(options: options), seedLevel: 0, isOnline: false)), settings: RouteSettings(name: GamePage.routeName))); }),
-            getSpaceBox(),
-            getMainWindowButton('Level Select', () { Navigator.push(context, MaterialPageRoute(builder: (context) => LevelSelectPage(options: options), settings: RouteSettings(name: LevelSelectPage.routeName))); }),
-            getSpaceBox(),
-            getMainWindowButton('Multiplayer', () {}),
-            getSpaceBox(),
-            getMainWindowButton('Options', () { Navigator.push(context, MaterialPageRoute(builder: (context) => OptionsPage(options: options), settings: RouteSettings(name: OptionsPage.routeName))); }),
+            _getMainWindowButton('Quick Game', () { Navigator.push(context, MaterialPageRoute(builder: (context) => GamePage(tetris: Tetris(gameControls: GameControls(options: options), seedLevel: 0, isOnline: false)), settings: RouteSettings(name: GamePage.routeName))); }),
+            _getSpaceBox(),
+            _getMainWindowButton('Level Select', () { Navigator.push(context, MaterialPageRoute(builder: (context) => LevelSelectPage(options: options), settings: RouteSettings(name: LevelSelectPage.routeName))); }),
+            _getSpaceBox(),
+            _getMainWindowButton('Multiplayer', () {}),
+            _getSpaceBox(),
+            _getMainWindowButton('Options', () { Navigator.push(context, MaterialPageRoute(builder: (context) => OptionsPage(options: options), settings: RouteSettings(name: OptionsPage.routeName))); }),
           ],
         ),
       ),
     );
   }
 
-  Widget getSpaceBox() {
+  Widget _getSpaceBox() {
     return const SizedBox(
       height: 30,
     );
   }
 
-  Widget getMainWindowButton(String text, VoidCallback clickEvent) {
+  Widget _getMainWindowButton(String text, VoidCallback clickEvent) {
     return Center(
       child: SizedBox(
         width: 200,
