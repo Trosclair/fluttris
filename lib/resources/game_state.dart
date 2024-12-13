@@ -3,5 +3,5 @@ enum GameState {
   gameOver,
   start,
   results,
-  pause
+  pause,
 }

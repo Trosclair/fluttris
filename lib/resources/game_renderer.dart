@@ -8,7 +8,9 @@ import 'package:fluttris/resources/piece.dart';
 import 'package:fluttris/resources/piece_type.dart';
 
 class GameRenderer {
-  final TextPaint _reg = TextPaint(style: TextStyle(fontSize: 12, color: BasicPalette.white.color));
+  final TextPaint _reg60 = TextPaint(style: TextStyle(fontSize: 60, color: BasicPalette.white.color));
+  final TextPaint _reg20 = TextPaint(style: TextStyle(fontSize: 20, color: BasicPalette.white.color));
+  final TextPaint _reg12 = TextPaint(style: TextStyle(fontSize: 12, color: BasicPalette.white.color));
 
   late Future loadAssets;
   late Sprite _boardBackground;
@@ -78,7 +80,7 @@ class GameRenderer {
 
   // draw fps count
   void renderFPS(Canvas canvas, int displayFPS) {
-    _reg.render(canvas, displayFPS.toString(), Vector2.all(0));
+    _reg12.render(canvas, displayFPS.toString(), Vector2.all(0));
   }
 
   // Render the blocks of the pieces that have been locked into place.
@@ -102,12 +104,12 @@ class GameRenderer {
   void renderStats(Canvas canvas, GameStats stats) {
     canvas.drawRect(Rect.fromLTWH(_scorePositionX - 1, _scorePositionY - 1, (_nextPieceBlockSideLength * 4) + 2, _scorePositionY + 72), Paint()..color = Colors.blue);
     canvas.drawRect(Rect.fromLTWH(_scorePositionX, _scorePositionY, (_nextPieceBlockSideLength * 4), _scorePositionY + 70), Paint()..color = Color(0xFF1C1C84));
-    _reg.render(canvas, 'SCORE:', Vector2(_scorePositionX, _scorePositionY));
-    _reg.render(canvas, stats.score.toString(), Vector2(_scorePositionX, _scorePositionY + 15));
-    _reg.render(canvas, 'Lines:', Vector2(_linesClearedPositionX, _linesClearedPositionY));
-    _reg.render(canvas, stats.totalLinesCleared.toString(), Vector2(_linesClearedPositionX, _linesClearedPositionY + 15));
-    _reg.render(canvas, 'Level:', Vector2(_levelClearedPositionX, _levelClearedPositionY));
-    _reg.render(canvas, stats.level.toString(), Vector2(_levelClearedPositionX, _levelClearedPositionY + 15));
+    _reg20.render(canvas, 'Score:', Vector2(_scorePositionX + 3, _scorePositionY));
+    _reg20.render(canvas, stats.score.toString(), Vector2(_scorePositionX + 3, _scorePositionY + 20));
+    _reg20.render(canvas, 'Lines:', Vector2(_linesClearedPositionX + 3, _linesClearedPositionY));
+    _reg20.render(canvas, stats.totalLinesCleared.toString(), Vector2(_linesClearedPositionX + 3, _linesClearedPositionY + 20));
+    _reg20.render(canvas, 'Level:', Vector2(_levelClearedPositionX + 3, _levelClearedPositionY));
+    _reg20.render(canvas, stats.level.toString(), Vector2(_levelClearedPositionX + 3, _levelClearedPositionY + 20));
   }
 
   void renderPieces(Canvas canvas, Piece currentPiece, Piece nextPiece, Piece nextPiece1, Piece nextPiece2, Piece nextPiece3, Piece? holdPiece) {
@@ -136,6 +138,11 @@ class GameRenderer {
   // Render the background of the board
   void renderBoardBackground(Canvas canvas) {
     _boardBackground.render(canvas, position: Vector2(_boardStartingPositionX, _boardStartingPositionY), size: Vector2(_blockSideLength * 10, _blockSideLength * 20));
+  }
+
+  void renderCountDown(Canvas canvas, int sec) {
+    canvas.drawRect(Rect.fromLTWH(_boardStartingPositionX, _boardStartingPositionY, _blockSideLength * 10, _blockSideLength * 20), Paint()..color = Colors.black);
+    _reg60.render(canvas, sec.toString(), Vector2(_boardStartingPositionX + (_blockSideLength * 5), _boardStartingPositionY + (_blockSideLength * 10)));
   }
 
   void renderPieceShadow(Canvas canvas, int x, int y, int currentPieceRotationState) {

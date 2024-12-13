@@ -42,7 +42,9 @@ class Tetris extends FlameGame with HasPerformanceTracker {
   int _speed = 0;
   int _screenWipeIndex = 19;
   int _lastWipeTime = 0;
-  GameState _gameState = GameState.playing;
+  int _countDown = 4;
+  int _lastCountDownTime = 0;
+  GameState _gameState = GameState.start;
 
   Tetris({required this.gameControls, required this.seedLevel, required this.isOnline}) {
     gameControls.down = _down;
@@ -71,15 +73,6 @@ class Tetris extends FlameGame with HasPerformanceTracker {
 
   @override
   void render(Canvas canvas) {
-    gameRenderer.renderBoardBackground(canvas);
-    // Render the blocks of the pieces that have been locked into place.
-    gameRenderer.renderPieces(canvas, _currentPiece, _nextPiece, _nextPiece1, _nextPiece2, _nextPiece3, _holdPiece);
-    gameRenderer.renderBoard(canvas, _board);
-    
-    // Render the shadow of the piece that is currently in play
-    if (_gameState == GameState.playing) {
-      gameRenderer.renderPieceShadow(canvas, _currentPiece.x, _getDropShadowYCoord(), _currentPiece.getRotationState());
-    }
 
     // FPS counter
     _fpsCount++;
@@ -88,10 +81,22 @@ class Tetris extends FlameGame with HasPerformanceTracker {
         _fpsCount = 0;
         _lastFPSPollTime = HomePage.globalTimer.elapsedMilliseconds;
     }
-    
-    gameRenderer.renderFPS(canvas, _displayFPS);
 
-    gameRenderer.renderStats(canvas, stats);
+    if (_gameState == GameState.start) {
+      gameRenderer.renderCountDown(canvas, _countDown);
+    }
+    else {
+      gameRenderer.renderBoardBackground(canvas);
+      // Render the blocks of the pieces that have been locked into place.// Render the shadow of the piece that is currently in play
+      if (_gameState == GameState.playing) {
+        gameRenderer.renderPieceShadow(canvas, _currentPiece.x, _getDropShadowYCoord(), _currentPiece.getRotationState());
+      }
+      gameRenderer.renderPieces(canvas, _currentPiece, _nextPiece, _nextPiece1, _nextPiece2, _nextPiece3, _holdPiece);
+      gameRenderer.renderBoard(canvas, _board);
+      gameRenderer.renderFPS(canvas, _displayFPS);
+
+      gameRenderer.renderStats(canvas, stats);
+    }
 
     super.render(canvas);
   }
@@ -135,11 +140,21 @@ class Tetris extends FlameGame with HasPerformanceTracker {
           Navigator.push(context, MaterialPageRoute(builder: (context) => ResultsPage(stats: stats, reset: _reset)));
         }
         break;
+      case GameState.start:
+        if (_countDown > 0) {
+          if (HomePage.globalTimer.elapsedMilliseconds > _lastCountDownTime + 1000) {
+            _countDown--;
+            _lastCountDownTime = HomePage.globalTimer.elapsedMilliseconds;
+          }
+        }
+        else {
+          _countDown = 4;
+          _gameState = GameState.playing;
+        }
+        break;
       case GameState.pause:
         break;
       case GameState.results:
-        break;
-      case GameState.start:
         break;
     }
   }
@@ -227,7 +242,7 @@ class Tetris extends FlameGame with HasPerformanceTracker {
 
   void _pause() {
     _gameState = GameState.pause;
-    Navigator.push(context, MaterialPageRoute(builder: (context) => PausePage(options: gameControls.options, resume: () { _gameState = GameState.playing; }), settings: RouteSettings(name: PausePage.routeName)));
+    Navigator.push(context, MaterialPageRoute(builder: (context) => PausePage(options: gameControls.options, resume: () { _gameState = GameState.start; }), settings: RouteSettings(name: PausePage.routeName)));
   }
 
   // Reset the game, so the user can play a new round.
@@ -261,7 +276,7 @@ class Tetris extends FlameGame with HasPerformanceTracker {
     _nextPiece2 = Piece.getPiece();
     _nextPiece3 = Piece.getPiece();
 
-    _gameState = GameState.playing;
+    _gameState = GameState.start;
   }
   
   // Try to move the Piece down
