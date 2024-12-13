@@ -4,10 +4,9 @@ import 'package:fluttris/resources/preferences.dart';
 
 class KeyBind {
   final ControlType control;
-  bool isPollingKeyPress = false;
   PhysicalKeyboardKey key;
 
-  static Map<ControlType, PhysicalKeyboardKey> defaultKeys = {
+  static final Map<ControlType, PhysicalKeyboardKey> _defaultKeys = {
     ControlType.drop: PhysicalKeyboardKey.keyS,
     ControlType.flip: PhysicalKeyboardKey.comma,
     ControlType.moveLeft: PhysicalKeyboardKey.keyA,
@@ -31,7 +30,7 @@ class KeyBind {
         return KeyBind(control: control, key: key);
       }
     }
-    return KeyBind(control: control, key: defaultKeys[control]!);
+    return KeyBind(control: control, key: _defaultKeys[control]!);
   }
   
   Future<bool> setKeyBind() async {

@@ -2,7 +2,7 @@ import 'dart:math';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttris/game/tetris.dart';
-import 'package:fluttris/resources/game_state.dart';
+import 'package:fluttris/resources/control_type.dart';
 import 'package:hold_down_button/hold_down_button.dart';
 
 class GamePage extends StatelessWidget {
@@ -63,21 +63,21 @@ class GamePage extends StatelessWidget {
               Row(
                 children: [
                   getSpaceBox(dpadButtonSideLength),
-                  getIconButtonBox(dpadButtonSideLength, () { if (tetris.gameState == GameState.playing) tetris.hold(); }, Icon(Icons.download, color: Colors.white, size: 60)),
+                  getIconButtonBox(dpadButtonSideLength, () { tetris.hold(); }, Icon(Icons.download, color: Colors.white, size: 60)),
                   getSpaceBox(dpadButtonSideLength)
                 ],
               ),
               Row(
                 children: [
-                  getIconButtonBox(dpadButtonSideLength, () { if (tetris.gameState == GameState.playing) tetris.rotate(tetris.currentPiece.rotations.length - 1); }, Icon(Icons.rotate_left, color: Colors.white, size: 60)),
+                  getIconButtonBox(dpadButtonSideLength, () { tetris.rotate(ControlType.rotateLeft); }, Icon(Icons.rotate_left, color: Colors.white, size: 60)),
                   getSpaceBox(dpadButtonSideLength),
-                  getIconButtonBox(dpadButtonSideLength, () { if (tetris.gameState == GameState.playing) tetris.rotate(1); }, Icon(Icons.rotate_right, color: Colors.white, size: 60))
+                  getIconButtonBox(dpadButtonSideLength, () { tetris.rotate(ControlType.rotateRight); }, Icon(Icons.rotate_right, color: Colors.white, size: 60))
                 ],
               ),
               Row(
                 children: [
                   getSpaceBox(dpadButtonSideLength),
-                  getIconButtonBox(dpadButtonSideLength, () { if (tetris.gameState == GameState.playing) tetris.rotate(2); }, Icon(Icons.flip, color: Colors.white, size: 60)),
+                  getIconButtonBox(dpadButtonSideLength, () { tetris.rotate(ControlType.flip); }, Icon(Icons.flip, color: Colors.white, size: 60)),
                   getSpaceBox(dpadButtonSideLength)
                 ],
               )
@@ -104,21 +104,21 @@ class GamePage extends StatelessWidget {
               Row(
                 children: [
                   getSpaceBox(dpadButtonSideLength),
-                  getIconButtonBox(dpadButtonSideLength, () { if (tetris.gameState == GameState.playing) tetris.hardDrop(); }, Icon(Icons.arrow_upward, color: Colors.white, size: 60)),
+                  getIconButtonBox(dpadButtonSideLength, tetris.hardDrop, Icon(Icons.arrow_upward, color: Colors.white, size: 60)),
                   getSpaceBox(dpadButtonSideLength)
                 ],
               ),
               Row(
                 children: [
-                  getIconButtonBox(dpadButtonSideLength, () { if (tetris.gameState == GameState.playing) tetris.moveLeft(); }, Icon(Icons.arrow_left, color: Colors.white, size: 60)),
+                  getIconButtonBox(dpadButtonSideLength, tetris.moveLeft, Icon(Icons.arrow_left, color: Colors.white, size: 60)),
                   getSpaceBox(dpadButtonSideLength),
-                  getIconButtonBox(dpadButtonSideLength, () { if (tetris.gameState == GameState.playing) tetris.moveRight(); }, Icon(Icons.arrow_right, color: Colors.white, size: 60))
+                  getIconButtonBox(dpadButtonSideLength, tetris.moveRight, Icon(Icons.arrow_right, color: Colors.white, size: 60))
                 ],
               ),
               Row(
                 children: [
                   getSpaceBox(dpadButtonSideLength),
-                  getIconButtonBox(dpadButtonSideLength, () { if (tetris.gameState == GameState.playing) tetris.down(true); }, Icon(Icons.arrow_downward, color: Colors.white, size: 60)),
+                  getIconButtonBox(dpadButtonSideLength, tetris.down, Icon(Icons.arrow_downward, color: Colors.white, size: 60)),
                   getSpaceBox(dpadButtonSideLength)
                 ],
               )

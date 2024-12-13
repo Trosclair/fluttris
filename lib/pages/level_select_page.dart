@@ -40,7 +40,7 @@ class LevelSelectPage extends StatelessWidget {
 
     for (int i = 0; i < 30; i++) {
       levels.add(
-        getMainWindowButton(i.toString(), () { Navigator.push(context, MaterialPageRoute(builder: (context) => GamePage(tetris: Tetris(gameControls: GameControls(options: options), seedLevel: i)), settings: RouteSettings(name: GamePage.routeName))); })
+        getMainWindowButton(i.toString(), () { Navigator.push(context, MaterialPageRoute(builder: (context) => GamePage(tetris: Tetris(gameControls: GameControls(options: options), seedLevel: i, isOnline: false)), settings: RouteSettings(name: GamePage.routeName))); })
       );
     }
 

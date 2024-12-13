@@ -2,7 +2,7 @@ class Level {
     static const double msPerFrame = 16.67; // approx 1/60 of sec in ms.
 
     // ms per piece drop. index with level number.
-    static Map<int, int> levelsToSpeeds = <int, int>{
+    static final Map<int, int> levelsToSpeeds = <int, int>{
     0: (48 * msPerFrame).toInt(),
     1: (43 * msPerFrame).toInt(),
     2: (38 * msPerFrame).toInt(),

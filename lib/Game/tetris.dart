@@ -1,187 +1,96 @@
 import 'dart:async';
 import 'dart:math';
-import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
-import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
-import 'package:flame/palette.dart';
-import 'package:flame/text.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttris/pages/home_page.dart';
 import 'package:fluttris/pages/pause_page.dart';
+import 'package:fluttris/resources/control_type.dart';
 import 'package:fluttris/resources/game_controls.dart';
+import 'package:fluttris/resources/game_renderer.dart';
 import 'package:fluttris/resources/game_state.dart';
+import 'package:fluttris/resources/game_stats.dart';
 import 'package:fluttris/resources/level.dart';
 import 'package:fluttris/resources/piece.dart';
 import 'package:fluttris/resources/piece_type.dart';
 
 class Tetris extends FlameGame with HasPerformanceTracker {
-  late BuildContext context;
-  Stopwatch globalTimer = Stopwatch();
-  Map<PieceType, Sprite> blockTypes = {};
-  late Sprite boardBackground;
-  List<List<PieceType?>> board = [];
-  late Piece currentPiece;
-  late Piece nextPiece; 
-  late Piece nextPiece1; 
-  late Piece nextPiece2; 
-  late Piece nextPiece3; 
-  Piece? holdPiece;
-  int lastFPSPollTime = 0;
-  int displayFPS = 0;
-  int fpsCount = 0;
-  int lastPieceDroppedTime = 0;
-  int level = 0;
-  int score = 0;
-  int speed = 0;
-  int totalLinesCleared = 0;
-  bool hasHeldAPiece = false;
-  bool tetrisCleared = false;
-  bool tSpin = false;
-  int screenWipeIndex = 19;
-  double blockSideLength = 0;
-  double boardStartingPositionX = 0;
-  double boardStartingPositionY = 0;
-  double nextPiecePositionX = 0;
-  double nextPiecePositionY = 0;
-  double nextPieceBlockSideLength = 0;
-  double nextPiece1PositionY = 0;
-  double nextPiece2PositionY = 0;
-  double nextPiece3PositionY = 0;
-  double holdPiecePositionX = 0;
-  double holdPiecePositionY = 0;
-  double scorePositionX = 0;
-  double scorePositionY = 0;
-  double linesClearedPositionX = 0;
-  double linesClearedPositionY = 0;
-  double levelClearedPositionX = 0;
-  double levelClearedPositionY = 0;
-  double statusPositionX = 0;
-  double statusPositionY = 0;
-  int lastWipeTime = 0;
-  GameState gameState = GameState.playing;
-  TextPaint reg = TextPaint(style: TextStyle(fontSize: 12, color: BasicPalette.white.color));
+
   final GameControls gameControls;
   final int seedLevel;
+  final bool isOnline;
+  final GameRenderer gameRenderer = GameRenderer();
+  final List<List<PieceType?>> _board = [];
 
-  Tetris({required this.gameControls, required this.seedLevel}) {
-    gameControls.down = down;
-    gameControls.rotate = rotate;
-    gameControls.pause = () {};
+  late BuildContext context;
+  late GameStats stats;
+
+  Piece _currentPiece = Piece.getPiece();
+  Piece _nextPiece = Piece.getPiece(); 
+  Piece _nextPiece1 = Piece.getPiece(); 
+  Piece _nextPiece2 = Piece.getPiece(); 
+  Piece _nextPiece3 = Piece.getPiece(); 
+  Piece? _holdPiece;
+  bool _hasHeldAPiece = false;
+  bool _tetrisCleared = false;
+  bool _tSpin = false;
+  int _lastFPSPollTime = 0;
+  int _displayFPS = 0;
+  int _fpsCount = 0;
+  int _lastPieceDroppedTime = 0;
+  int _speed = 0;
+  int _screenWipeIndex = 19;
+  int _lastWipeTime = 0;
+  GameState _gameState = GameState.playing;
+
+  Tetris({required this.gameControls, required this.seedLevel, required this.isOnline}) {
+    gameControls.down = _down;
+    gameControls.rotate = _rotate;
     gameControls.hold = hold;
     gameControls.moveLeft = moveLeft;
     gameControls.moveRight = moveRight;
     gameControls.hardDrop = hardDrop;
-    gameControls.reset = reset;
-    gameControls.pause = pause;
+    gameControls.reset = _reset;
+    gameControls.pause = _pause;
 
-    globalTimer.start();
-    reset();
+    _reset();
   }
 
   @override
   FutureOr<void> onLoad() async {
     await super.onLoad();
-    setSizes();
-    // load in the few images that'll be used.
-    boardBackground = Sprite(await Flame.images.load('board_background.png'));
-    blockTypes.addEntries(<PieceType, Sprite>{
-        PieceType.empty: Sprite(await Flame.images.load('black.png')),
-        PieceType.z: Sprite(await Flame.images.load('red.png')),
-        PieceType.j: Sprite(await Flame.images.load('blue.png')),
-        PieceType.s: Sprite(await Flame.images.load('green.png')),
-        PieceType.o: Sprite(await Flame.images.load('yellow.png')),
-        PieceType.i: Sprite(await Flame.images.load('cyan.png')),
-        PieceType.t: Sprite(await Flame.images.load('purple.png')),
-        PieceType.l: Sprite(await Flame.images.load('orange.png')),
-        PieceType.shadow: Sprite(await Flame.images.load('white.png')),
-      }.entries
-    );
+    await gameRenderer.loadAssets;
   }
 
   @override
   void onGameResize(Vector2 size) {
     super.onGameResize(size);
-    setSizes();
+    gameRenderer.reset(size);
   }
 
   @override
   void render(Canvas canvas) {
-    // Render the background of the board
-    boardBackground.render(canvas, position: Vector2(boardStartingPositionX, boardStartingPositionY), size: Vector2(blockSideLength * 10, blockSideLength * 20));
-
-    // draw the next piece backing boxes.
-    drawPieceBox(canvas, nextPiecePositionX, nextPiecePositionY, nextPieceBlockSideLength);
-    drawPieceBox(canvas, nextPiecePositionX, nextPiece1PositionY, nextPieceBlockSideLength * .8);
-    drawPieceBox(canvas, nextPiecePositionX, nextPiece2PositionY, nextPieceBlockSideLength * .8);
-    drawPieceBox(canvas, nextPiecePositionX, nextPiece3PositionY, nextPieceBlockSideLength * .8);
-
-    // draw the next piece previews
-    drawPiece(nextPiecePositionX, nextPiecePositionY, nextPieceBlockSideLength, nextPiece, canvas);
-    drawPiece(nextPiecePositionX, nextPiece1PositionY, nextPieceBlockSideLength * .8, nextPiece1, canvas);
-    drawPiece(nextPiecePositionX, nextPiece2PositionY, nextPieceBlockSideLength * .8, nextPiece2, canvas);
-    drawPiece(nextPiecePositionX, nextPiece3PositionY, nextPieceBlockSideLength * .8, nextPiece3, canvas);
-
-    // draw the hold piece backing box and then draw the hold piece if the player has one held.
-    drawPieceBox(canvas, holdPiecePositionX, holdPiecePositionY, nextPieceBlockSideLength);
-    if (holdPiece != null) {
-      drawPiece(holdPiecePositionX, holdPiecePositionY, nextPieceBlockSideLength, holdPiece!, canvas);
-    }
+    gameRenderer.renderBoardBackground(canvas);
+    // Render the blocks of the pieces that have been locked into place.
+    gameRenderer.renderPieces(canvas, _currentPiece, _nextPiece, _nextPiece1, _nextPiece2, _nextPiece3, _holdPiece);
+    gameRenderer.renderBoard(canvas, _board);
     
     // Render the shadow of the piece that is currently in play
-    if (gameState == GameState.playing) {
-      int shadowY = getDropShadowYCoord();
-      for (int i = 0; i < 16; i++) {
-        if (currentPiece.getRotationState() & (0x8000 >> i) > 0) {
-          Vector2 pos = Vector2(boardStartingPositionX + (blockSideLength * (currentPiece.x.toDouble() + (i % 4)).toDouble()), boardStartingPositionY + (blockSideLength * (shadowY + (i ~/ 4)).toDouble()));
-          blockTypes[PieceType.shadow]!.render(
-            canvas,
-            position: pos,
-            size: Vector2.all(blockSideLength)
-          );
-        }
-      }
-    }
-    
-    // Render the block of the pieces that have been locked into place.
-    for (int i = 0; i < 10; i++) {
-      for (int j = 0; j < 20; j++) {
-        PieceType? pt = board[i][j];
-        if (pt != null) {
-          Sprite block = blockTypes[pt]!;
-          block.render(
-            canvas, 
-            position: Vector2(boardStartingPositionX + (i * blockSideLength), boardStartingPositionY + (j * blockSideLength)), 
-            size: Vector2.all(blockSideLength)
-          );
-        }
-      }
-    }
-
-    // Draw the current piece that is in play
-    if (gameState == GameState.playing) {
-      drawPiece(boardStartingPositionX + (currentPiece.x * blockSideLength), boardStartingPositionY + (currentPiece.y * blockSideLength), blockSideLength, currentPiece, canvas);
+    if (_gameState == GameState.playing) {
+      gameRenderer.renderPieceShadow(canvas, _currentPiece.x, _getDropShadowYCoord(), _currentPiece.getRotationState());
     }
 
     // FPS counter
-    fpsCount++;
-    if (globalTimer.elapsedMilliseconds > lastFPSPollTime + 1000) {
-        displayFPS = fpsCount;
-        fpsCount = 0;
-        lastFPSPollTime = globalTimer.elapsedMilliseconds;
+    _fpsCount++;
+    if (HomePage.globalTimer.elapsedMilliseconds > _lastFPSPollTime + 1000) {
+        _displayFPS = _fpsCount;
+        _fpsCount = 0;
+        _lastFPSPollTime = HomePage.globalTimer.elapsedMilliseconds;
     }
     
-    // draw fps count
-    reg.render(canvas, displayFPS.toString(), Vector2.all(0));
+    gameRenderer.renderFPS(canvas, _displayFPS);
 
-    // draw the score/lines/level data.
-    canvas.drawRect(Rect.fromLTWH(scorePositionX - 1, scorePositionY - 1, (nextPieceBlockSideLength * 4) + 2, scorePositionY + 72), Paint()..color = Colors.blue);
-    canvas.drawRect(Rect.fromLTWH(scorePositionX, scorePositionY, (nextPieceBlockSideLength * 4), scorePositionY + 70), Paint()..color = Color(0xFF1C1C84));
-    reg.render(canvas, 'SCORE:', Vector2(scorePositionX, scorePositionY));
-    reg.render(canvas, score.toString(), Vector2(scorePositionX, scorePositionY + 15));
-    reg.render(canvas, 'Lines:', Vector2(linesClearedPositionX, linesClearedPositionY));
-    reg.render(canvas, totalLinesCleared.toString(), Vector2(linesClearedPositionX, linesClearedPositionY + 15));
-    reg.render(canvas, 'Level:', Vector2(levelClearedPositionX, levelClearedPositionY));
-    reg.render(canvas, level.toString(), Vector2(levelClearedPositionX, levelClearedPositionY + 15));
+    gameRenderer.renderStats(canvas, stats);
 
     super.render(canvas);
   }
@@ -190,45 +99,47 @@ class Tetris extends FlameGame with HasPerformanceTracker {
   void update(double dt) {
     super.update(dt);
     
-    gameControls.checkForKeyPresses(gameState, currentPiece);
 
-    if (gameState == GameState.playing) {
+    switch (_gameState) {
+      case GameState.playing:
+        gameControls.checkForKeyPresses(_gameState, _currentPiece);
 
-      // During startup there wasn't a good place for this, because I eventually want the user to select levels...
-      if (speed == 0) {
-        speed = Level.levelsToSpeeds[min(29, level)]!;
-      }
-
-      // if the timer elapses the time + levelSpeed then drop the piece down one block.
-      if (globalTimer.elapsedMilliseconds > lastPieceDroppedTime + speed) {
-        down(false);
-        lastPieceDroppedTime = globalTimer.elapsedMilliseconds;
-      }
-
-    }
-    else if (gameState == GameState.gameOver) {
-      if (screenWipeIndex >= 0) { // while we are still not at the top of the board...
-        
-        // Every 150ms add a row of black blocks to the board.
-        // This makes it look like the board is being wiped.
-        if (globalTimer.elapsedMilliseconds > lastWipeTime + 150) {
-          for (int x = 0; x < 10; x++) {
-            board[x][screenWipeIndex] = PieceType.empty;
-          }
-
-          screenWipeIndex--;
-          lastWipeTime = globalTimer.elapsedMilliseconds;
+        // During startup there wasn't a good place for this, because I eventually want the user to select levels...
+        if (_speed == 0) {
+          _speed = Level.levelsToSpeeds[min(29, stats.level)]!;
         }
-      }
-      else if (gameState == GameState.results) {
 
-      }
-      else if (gameState == GameState.pause) {
+        // if the timer elapses the time + levelSpeed then drop the piece down one block.
+        if (HomePage.globalTimer.elapsedMilliseconds > _lastPieceDroppedTime + _speed) {
+          _down(false);
+          _lastPieceDroppedTime = HomePage.globalTimer.elapsedMilliseconds;
+        }
+        break;
+      case GameState.gameOver:
+        if (_screenWipeIndex >= 0) { // while we are still not at the top of the board...
+        
+          // Every 150ms add a row of black blocks to the board.
+          // This makes it look like the board is being wiped.
+          if (HomePage.globalTimer.elapsedMilliseconds > _lastWipeTime + 150) {
+            for (int x = 0; x < 10; x++) {
+              _board[x][_screenWipeIndex] = PieceType.empty;
+            }
 
-      }
-      else { // animation finished, so call setGameState to refresh the overlays.
-        gameState = GameState.results;
-      }
+            _screenWipeIndex--;
+            _lastWipeTime = HomePage.globalTimer.elapsedMilliseconds;
+          }
+        }
+        else { // animation finished, so call setGameState to refresh the overlays.
+          _gameState = GameState.results;
+        }
+        break;
+      case GameState.pause:
+        break;
+      case GameState.results:
+
+        break;
+      case GameState.start:
+        break;
     }
   }
 
@@ -237,121 +148,125 @@ class Tetris extends FlameGame with HasPerformanceTracker {
     return Colors.black;
   }
 
-  void pause() {
-    gameState = GameState.pause;
-    Navigator.push(context, MaterialPageRoute(builder: (context) => PausePage(options: gameControls.options, resume: () { gameState = GameState.playing; }), settings: RouteSettings(name: PausePage.routeName)));
+  // Try to move the Piece left
+  void moveLeft() {
+    if (!_checkCollision(_currentPiece.x - 1, _currentPiece.y) && _gameState == GameState.playing) {
+      _currentPiece.x--;
+    }
   }
 
-  /// draws the backing box for the hold and next pieces.
-  void drawPieceBox(Canvas canvas, double startX, double startY, double sideLength) {
-    canvas.drawRect(Rect.fromLTWH(startX - 1, startY - 1, (sideLength * 4) + 2, (sideLength * 4) + 2), Paint()..color = Colors.blue);
-    canvas.drawRect(Rect.fromLTWH(startX, startY, (sideLength * 4), (sideLength * 4)), Paint()..color = Color(0xFF1C1C84));
+  // Try to move the Piece right
+  void moveRight() {
+    if (!_checkCollision(_currentPiece.x + 1, _currentPiece.y) && _gameState == GameState.playing) {
+      _currentPiece.x++;
+    }
+  }
+
+  void rotate(ControlType ct) {
+    if (_gameState == GameState.playing) {
+      if (ct == ControlType.flip) {
+        _rotate(2);
+      }
+      else if (ct == ControlType.rotateRight) {
+        _rotate(1);
+      }
+      else if (ct == ControlType.rotateLeft) {
+        _rotate(_currentPiece.rotations.length - 1);
+      }
+    }
+  }
+
+  /// Move the current piece to the hold box if we haven't done it yet.
+  void hold() {
+    if (!_hasHeldAPiece && _gameState == GameState.playing) {   // can only hold a piece once per new piece.
+      _hasHeldAPiece = true;
+
+      // First time holding a piece.
+      if (_holdPiece != null) {
+        Piece temp = _holdPiece!;
+        _holdPiece = _currentPiece;
+        _currentPiece = temp;
+      }
+      else { // Next time holding a piece.
+        _holdPiece = _currentPiece;
+        _currentPiece = _nextPiece;
+        _nextPiece = _nextPiece1;
+        _nextPiece1 = _nextPiece2;
+        _nextPiece2 = _nextPiece3;
+        _nextPiece3 = Piece.getPiece();
+      }
+
+      // reset the new held piece to the top of the board and reset the rotation state.
+      _holdPiece?.x = 4;
+      _holdPiece?.y = 0;
+      _holdPiece?.rotationState = 0;
+
+      // reset drop timer.
+      _lastPieceDroppedTime = HomePage.globalTimer.elapsedMilliseconds;
+    }
+  }
+
+  // try to drop the current piece to the bottom of the board until it collides with another piece or the bottom.
+  void hardDrop() {
+    while (_moveDown()) {
+      stats.score += 10 * stats.level;
+    }
+    _afterDropCollision();
+    _tSpin = false;
+    _lastPieceDroppedTime = HomePage.globalTimer.elapsedMilliseconds;
+  }
+
+  void down() 
+  { 
+    if (_gameState == GameState.playing) 
+    { 
+      _down(true); 
+    } 
+  }
+
+  void _pause() {
+    _gameState = GameState.pause;
+    Navigator.push(context, MaterialPageRoute(builder: (context) => PausePage(options: gameControls.options, resume: () { _gameState = GameState.playing; }), settings: RouteSettings(name: PausePage.routeName)));
   }
 
   // Reset the game, so the user can play a new round.
-  void reset() {
+  void _reset() {
 
     // clear and reset the board
-    board.clear();
+    _board.clear();
     for (int i = 0; i < 10; i++) {
       List<PieceType?> row = [];
       for (int j = 0; j < 20; j++) {
         row.add(null);
       }
-      board.add(row);
+      _board.add(row);
     }
 
     // reset important state information.
-    tSpin = false;
-    screenWipeIndex = 19;
-    tetrisCleared = false;
-    hasHeldAPiece = false;
-    lastWipeTime = 0;
-    lastPieceDroppedTime = 0;
-    lastFPSPollTime = 0;
-    speed = 0;
-    score = 0;
-    level = seedLevel;
-    totalLinesCleared = 0;
-    holdPiece = null;
-    Piece.pieces.clear(); // clear this to get rid of stale pieces.
-    currentPiece = Piece.getPiece();
-    nextPiece = Piece.getPiece();
-    nextPiece1 = Piece.getPiece();
-    nextPiece2 = Piece.getPiece();
-    nextPiece3 = Piece.getPiece();
+    _tSpin = false;
+    _screenWipeIndex = 19;
+    _tetrisCleared = false;
+    _hasHeldAPiece = false;
+    _lastWipeTime = 0;
+    _lastPieceDroppedTime = 0;
+    _lastFPSPollTime = 0;
+    _speed = 0;
+    stats = GameStats(seedLevel: seedLevel);
+    _holdPiece = null;
+    Piece.resetBag(); // clear this to get rid of stale pieces.
+    _currentPiece = Piece.getPiece();
+    _nextPiece = Piece.getPiece();
+    _nextPiece1 = Piece.getPiece();
+    _nextPiece2 = Piece.getPiece();
+    _nextPiece3 = Piece.getPiece();
 
-    // Reset the timer as well since I reset the time variables.
-    globalTimer.reset();
-    gameState = GameState.playing;
-  }
-
-  /// Draw the piece given at the coords given.
-  void drawPiece(double piecePositionX, double piecePositionY, double sideLength, Piece piece, Canvas canvas) {
-    for (int i = 0; i < 16; i++) {
-      if (piece.getRotationState() & (0x8000 >> i) > 0) {
-        Vector2 pos = Vector2(piecePositionX + (sideLength * (i % 4).toDouble()), piecePositionY + (sideLength * (i ~/ 4).toDouble()));
-        blockTypes[piece.pieceType]!.render(
-          canvas,
-          position: pos,
-          size: Vector2.all(sideLength)
-        );
-      }
-    }
-  }
-
-  /// everytime the game window is resized we recalculate all these values that control how and where things are drawn.
-  void setSizes() {
-    blockSideLength = (size.y) / 20;
-    boardStartingPositionX = (size.x / 2) - (blockSideLength * 5);
-    boardStartingPositionY = 0;
-
-    nextPiecePositionX = boardStartingPositionX + (blockSideLength * 10) + 10;
-    nextPiecePositionY = boardStartingPositionY + 20;
-    nextPieceBlockSideLength = blockSideLength * .7;
-
-    nextPiece1PositionY = nextPiecePositionY + (nextPieceBlockSideLength * 4) + 20;
-    nextPiece2PositionY = nextPiecePositionY + (nextPieceBlockSideLength * 4 + (nextPieceBlockSideLength * 4 * .8)) + 40;
-    nextPiece3PositionY = nextPiecePositionY + (nextPieceBlockSideLength * 4 + (nextPieceBlockSideLength * 8* .8)) + 60;
-
-    holdPiecePositionX = 10;
-    holdPiecePositionY = boardStartingPositionY + 20;
-
-    scorePositionX = 10;
-    scorePositionY = holdPiecePositionY + (nextPieceBlockSideLength * 4) + 20;
-
-    linesClearedPositionX = 10;
-    linesClearedPositionY = scorePositionY + 60;
-
-    levelClearedPositionX = 10;
-    levelClearedPositionY = linesClearedPositionY + 60;
-
-    statusPositionX = 10;
-    statusPositionY = levelClearedPositionY + 60;
-  }
-
-  // Try to move the Piece left
-  bool moveLeft() {
-    if (!checkCollision(currentPiece.x - 1, currentPiece.y)) {
-      currentPiece.x--;
-      return true;
-    }
-    return false;
-  }
-
-  // Try to move the Piece right
-  bool moveRight() {
-    if (!checkCollision(currentPiece.x + 1, currentPiece.y)) {
-      currentPiece.x++;
-      return true;
-    }
-    return false;
+    _gameState = GameState.playing;
   }
   
   // Try to move the Piece down
-  bool moveDown() {
-    if (!checkCollision(currentPiece.x, currentPiece.y + 1)) {
-      currentPiece.y++;
+  bool _moveDown() {
+    if (!_checkCollision(_currentPiece.x, _currentPiece.y + 1)) {
+      _currentPiece.y++;
       return true;
     }
     return false;
@@ -359,13 +274,13 @@ class Tetris extends FlameGame with HasPerformanceTracker {
 
   // check to see if the currentPiece's given location and rotationState collide with anything on the board.
   // Return true if a collision is found.
-  bool checkCollision(int x, int y) {
+  bool _checkCollision(int x, int y) {
     bool b = false;
     int iterations = 0;
 
     while (iterations < 16) {
-      if (!b && (currentPiece.getRotationState() & (0x8000 >> iterations)) > 0) {
-        b |= areXAndYCoordIllegal(x + (iterations % 4), y + (iterations ~/ 4));
+      if (!b && (_currentPiece.getRotationState() & (0x8000 >> iterations)) > 0) {
+        b |= _areXAndYCoordIllegal(x + (iterations % 4), y + (iterations ~/ 4));
       }
       
       iterations++;
@@ -375,27 +290,27 @@ class Tetris extends FlameGame with HasPerformanceTracker {
   }
 
   // Return true if the x/y coordinates are out of bounds or if the space is full on the board.
-  bool areXAndYCoordIllegal(int x, int y) {
-    return (x < 0) || (x >= 10) || (y < 0) || (y >= 20) || (board[x][y] != null);
+  bool _areXAndYCoordIllegal(int x, int y) {
+    return (x < 0) || (x >= 10) || (y < 0) || (y >= 20) || (_board[x][y] != null);
   }
 
   // Get the y coordinate of where the drop shadow needs to be.
-  int getDropShadowYCoord() {
-    int y = currentPiece.y;
-    while (!checkCollision(currentPiece.x, y)){
+  int _getDropShadowYCoord() {
+    int y = _currentPiece.y;
+    while (!_checkCollision(_currentPiece.x, y)){
       y++;
     }
     return y - 1;
   }
 
   // rotate the piece by the desired amount of rotations.
-  void rotate(int rotationStateMutation) {
-    int oldRotationState = currentPiece.rotationState;
-    currentPiece.rotationState = (currentPiece.rotationState + rotationStateMutation) % currentPiece.rotations.length;
+  void _rotate(int rotationStateMutation) {
+    int oldRotationState = _currentPiece.rotationState;
+    _currentPiece.rotationState = (_currentPiece.rotationState + rotationStateMutation) % _currentPiece.rotations.length;
 
     // check to see if the proposed rotation collides with anything.
-    if (checkCollision(currentPiece.x, currentPiece.y)) {
-      currentPiece.rotationState = oldRotationState; // rotation didn't work out...
+    if (_checkCollision(_currentPiece.x, _currentPiece.y)) {
+      _currentPiece.rotationState = oldRotationState; // rotation didn't work out...
     }
     else { // rotation did work out!
 
@@ -404,7 +319,7 @@ class Tetris extends FlameGame with HasPerformanceTracker {
       //OOOOO
       //O***O
       //OO*OO
-      if (currentPiece.pieceType == PieceType.t && currentPiece.rotationState == 0) {
+      if (_currentPiece.pieceType == PieceType.t && _currentPiece.rotationState == 0) {
 
         // If the old rotationstate is:
         //OX*OO
@@ -412,10 +327,10 @@ class Tetris extends FlameGame with HasPerformanceTracker {
         //OX*XO
         // The X's need to be filled in for it to count as a T-Spin
         if (oldRotationState == 1) {
-          tSpin = 
-            board[currentPiece.x + 2][currentPiece.y] != null && 
-            board[currentPiece.x][currentPiece.y + 2] != null && 
-            board[currentPiece.x + 2][currentPiece.y + 2] != null;
+          _tSpin = 
+            _board[_currentPiece.x + 2][_currentPiece.y] != null && 
+            _board[_currentPiece.x][_currentPiece.y + 2] != null && 
+            _board[_currentPiece.x + 2][_currentPiece.y + 2] != null;
         }
         // If the old rotationstate is:
         //OO*XO
@@ -423,69 +338,39 @@ class Tetris extends FlameGame with HasPerformanceTracker {
         //OX*XO
         // The X's need to be filled in for it to count as a T-Spin
         else if (oldRotationState == 3) {
-          tSpin = 
-            board[currentPiece.x][currentPiece.y] != null && 
-            board[currentPiece.x][currentPiece.y + 2] != null && 
-            board[currentPiece.x + 2][currentPiece.y + 2] != null;
+          _tSpin = 
+            _board[_currentPiece.x][_currentPiece.y] != null && 
+            _board[_currentPiece.x][_currentPiece.y + 2] != null && 
+            _board[_currentPiece.x + 2][_currentPiece.y + 2] != null;
         }
       }
     }
   }
 
-  /// Move the current piece to the hold box if we haven't done it yet.
-  void hold() {
-    if (!hasHeldAPiece) {   // can only hold a piece once per new piece.
-      hasHeldAPiece = true;
-
-      // First time holding a piece.
-      if (holdPiece != null) {
-        Piece temp = holdPiece!;
-        holdPiece = currentPiece;
-        currentPiece = temp;
-      }
-      else { // Next time holding a piece.
-        holdPiece = currentPiece;
-        currentPiece = nextPiece;
-        nextPiece = nextPiece1;
-        nextPiece1 = nextPiece2;
-        nextPiece2 = nextPiece3;
-        nextPiece3 = Piece.getPiece();
-      }
-
-      // reset the new held piece to the top of the board and reset the rotation state.
-      holdPiece?.x = 4;
-      holdPiece?.y = 0;
-      holdPiece?.rotationState = 0;
-
-      // reset drop timer.
-      lastPieceDroppedTime = globalTimer.elapsedMilliseconds;
-    }
-  }
-
   // Take current piece and add its four blocks to the board.
-  void commitPieceToBoard() {
+  void _commitPieceToBoard() {
     int iterations = 0;
     
     while (iterations < 16) {
-      if ((currentPiece.getRotationState() & (0x8000 >> iterations)) > 0) {
-        board[currentPiece.x + (iterations % 4)][currentPiece.y + (iterations ~/ 4)] = currentPiece.pieceType;
+      if ((_currentPiece.getRotationState() & (0x8000 >> iterations)) > 0) {
+        _board[_currentPiece.x + (iterations % 4)][_currentPiece.y + (iterations ~/ 4)] = _currentPiece.pieceType;
       }
       iterations++;
     }
   }
 
   /// remove a specified line, and move all the rest of the blocks from lower y vals down.
-  void removeLine(int y) {
+  void _removeLine(int y) {
     do {
       for (int x = 0; x < 10; x++) {
-        board[x][y] = (y == 0) ? null : board[x][y - 1];
+        _board[x][y] = (y == 0) ? null : _board[x][y - 1];
       }
       y--;
     } while (y >= 0);
   }
 
   // Check the entire board for lines to remove.
-  void removeLines() {
+  void _removeLines() {
     int linesCleared = 0;
 
     // loop backwards through the board.
@@ -493,98 +378,63 @@ class Tetris extends FlameGame with HasPerformanceTracker {
       // check for complete line.
       bool isLineComplete = true;
       for (int x = 0; x < 10; x++) {
-        isLineComplete &= !(board[x][y] == null);
+        isLineComplete &= !(_board[x][y] == null);
       }
 
       // if line is complete remove it then add a cleared line and test the line again.
       if (isLineComplete) {
-        removeLine(y);
+        _removeLine(y);
         linesCleared++;
         y++;            // increment the y coordinate since we just shifted a row down.
       }
     }
 
     if (linesCleared > 0) {
-
-      totalLinesCleared += linesCleared;
-      level = max(totalLinesCleared ~/ 10, seedLevel);
-      
-      // Reset the speed to what the level's is.
-      speed = Level.levelsToSpeeds[min(29, level)]!.toInt();
-
       // Set status and update score.
-      setStatusAndScoreAfterLineClear(linesCleared);
-
+      stats.updateStatsAfterLineClear(linesCleared, _tSpin, _tetrisCleared);
+      // Reset the speed to what the level's is.
+      _speed = Level.levelsToSpeeds[min(29, stats.level)]!.toInt();
       // if 4 lines are cleared at once or if we have a T-Spin double set the bonus points bool to true;
-      tetrisCleared = linesCleared == 4 || (tSpin && linesCleared == 2);
+      _tetrisCleared = linesCleared == 4 || (_tSpin && linesCleared == 2);
     }
   }
 
-  // Set the status and the score if we've cleared line(s).
-  void setStatusAndScoreAfterLineClear(int linesCleared) {
-    double multiplier = 1;
-    multiplier *= tSpin ? 12 : 1;
-    multiplier *= (tetrisCleared && linesCleared == 4) ? 2 : 1;
-
-    if (linesCleared == 1) {
-      score += (40 * (level + 1) * multiplier).toInt();
-    }
-    else if (linesCleared == 2) {
-      score += (100 * (level + 1) * multiplier).toInt();
-    }
-    else if (linesCleared == 3) {
-      score += (300 * (level + 1) * multiplier).toInt();
-    }
-    else if (linesCleared == 4) {
-      score += (1200 * (level + 1) * multiplier).toInt();
-    }
-  }
 
   // The piece has tried to move down and can't so we get to lock it in place!
-  void afterDropCollision() {
+  void _afterDropCollision() {
     // move current piece to the board.
-    commitPieceToBoard();
+    _commitPieceToBoard();
     // check for lines to remove.
-    removeLines();
+    _removeLines();
     // Move next pieces
-    currentPiece = nextPiece;
-    nextPiece = nextPiece1;
-    nextPiece1 = nextPiece2;
-    nextPiece2 = nextPiece3;
-    nextPiece3 = Piece.getPiece();
+    _currentPiece = _nextPiece;
+    _nextPiece = _nextPiece1;
+    _nextPiece1 = _nextPiece2;
+    _nextPiece2 = _nextPiece3;
+    _nextPiece3 = Piece.getPiece();
 
     // reset the held piece flag.
-    hasHeldAPiece = false;
+    _hasHeldAPiece = false;
 
     // We've dropped a new piece and it immediately has a collision. 
     // Game Over!
-    if (checkCollision(currentPiece.x, currentPiece.y)) {
-      gameState = GameState.gameOver;
+    if (_checkCollision(_currentPiece.x, _currentPiece.y)) {
+      _gameState = GameState.gameOver;
     }
-  }
-
-  // try to drop the current piece to the bottom of the board until it collides with another piece or the bottom.
-  void hardDrop() {
-    while (moveDown()) {
-      score += 10;
-    }
-    afterDropCollision();
-    tSpin = false;
-    lastPieceDroppedTime = globalTimer.elapsedMilliseconds;
   }
 
   // try to move the piece down one block.
-  void down(bool isHoldingDown) {
+  void _down(bool isHoldingDown) {
 
-    if (!moveDown()) {
-      afterDropCollision();
+    if (!_moveDown()) {
+      _afterDropCollision();
     }
     else {
       if (isHoldingDown) {
-        score += 10;
+        stats.score += 10 * stats.level;
       }
     }
-    tSpin = false;
-    lastPieceDroppedTime = globalTimer.elapsedMilliseconds;
+    _tSpin = false;
+    _lastPieceDroppedTime = HomePage.globalTimer.elapsedMilliseconds;
   }
 }

@@ -21,7 +21,7 @@ class Options extends Game with KeyboardEvents {
 
   BuildContext? context;
   Function(PhysicalKeyboardKey)? onKeyPress;
-  TextPaint reg = TextPaint(style: TextStyle(fontSize: 12, color: BasicPalette.white.color));
+  final TextPaint _reg = TextPaint(style: TextStyle(fontSize: 12, color: BasicPalette.white.color));
   
   late KeyBind rotateRightBind;
   late KeyBind rotateLeftBind;
@@ -49,7 +49,7 @@ class Options extends Game with KeyboardEvents {
   @override
   void render(Canvas canvas) {
     if (context != null) {
-      reg.render(canvas, 'Press a Key...', Vector2(MediaQuery.sizeOf(context!).width / 2, MediaQuery.sizeOf(context!).height / 2));
+      _reg.render(canvas, 'Press a Key...', Vector2(MediaQuery.sizeOf(context!).width / 2, MediaQuery.sizeOf(context!).height / 2));
     }
   }
   
@@ -106,27 +106,27 @@ class Options extends Game with KeyboardEvents {
   Future<bool> save() async {
     bool saveSuccessful = true;
 
-    saveSuccessful &= await setAreTouchControlsInverted();
+    saveSuccessful &= await _setAreTouchControlsInverted();
 
     for (KeyBind keyBind in keyboardBinds) {
       saveSuccessful &= await keyBind.setKeyBind();
     }
 
-    saveSuccessful &= await setDisplayName();
-    saveSuccessful &= await setUserID();
+    saveSuccessful &= await _setDisplayName();
+    saveSuccessful &= await _setUserID();
 
     return saveSuccessful;
   }
 
-  Future<bool> setAreTouchControlsInverted() async {
+  Future<bool> _setAreTouchControlsInverted() async {
     return (await Preferences.getPreferences()).setBool('areTouchControlsInverted', areTouchControlsInverted);
   }
 
-  Future<bool> setDisplayName() async {
+  Future<bool> _setDisplayName() async {
     return (await Preferences.getPreferences()).setString('displayName', displayName);
   }
   
-  Future<bool> setUserID() async {
+  Future<bool> _setUserID() async {
     return (await Preferences.getPreferences()).setString('userID', userID);
   }
 }

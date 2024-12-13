@@ -6,17 +6,14 @@ import 'package:fluttris/pages/options_page.dart';
 import 'package:fluttris/resources/game_controls.dart';
 import 'package:fluttris/resources/options.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends StatelessWidget {
   static final String routeName = '/';
+  static final Stopwatch globalTimer = Stopwatch();
   final Options options;
-  const HomePage({super.key, required this.options});
 
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
+  HomePage({super.key, required this.options}) { globalTimer.start(); }
 
-class _HomePageState extends State<HomePage> {
-
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -25,13 +22,13 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            getMainWindowButton('Quick Game', () { Navigator.push(context, MaterialPageRoute(builder: (context) => GamePage(tetris: Tetris(gameControls: GameControls(options: widget.options), seedLevel: 0)), settings: RouteSettings(name: GamePage.routeName))); }),
+            getMainWindowButton('Quick Game', () { Navigator.push(context, MaterialPageRoute(builder: (context) => GamePage(tetris: Tetris(gameControls: GameControls(options: options), seedLevel: 0, isOnline: false)), settings: RouteSettings(name: GamePage.routeName))); }),
             getSpaceBox(),
-            getMainWindowButton('Level Select', () { Navigator.push(context, MaterialPageRoute(builder: (context) => LevelSelectPage(options: widget.options), settings: RouteSettings(name: LevelSelectPage.routeName))); }),
+            getMainWindowButton('Level Select', () { Navigator.push(context, MaterialPageRoute(builder: (context) => LevelSelectPage(options: options), settings: RouteSettings(name: LevelSelectPage.routeName))); }),
             getSpaceBox(),
             getMainWindowButton('Multiplayer', () {}),
             getSpaceBox(),
-            getMainWindowButton('Options', () { Navigator.push(context, MaterialPageRoute(builder: (context) => OptionsPage(options: widget.options), settings: RouteSettings(name: OptionsPage.routeName))); }),
+            getMainWindowButton('Options', () { Navigator.push(context, MaterialPageRoute(builder: (context) => OptionsPage(options: options), settings: RouteSettings(name: OptionsPage.routeName))); }),
           ],
         ),
       ),

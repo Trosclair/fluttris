@@ -1,50 +1,48 @@
 import 'dart:math';
-
 import 'package:flutter/services.dart';
+import 'package:fluttris/pages/home_page.dart';
 import 'package:fluttris/resources/game_state.dart';
 import 'package:fluttris/resources/options.dart';
 import 'package:fluttris/resources/piece.dart';
 
 class GameControls {
   final Options options;
-  final int dasAccelerationTime = 68;
-  final int dasResetTime = 17;
+  static const int _dasAccelerationTime = 68;
+  static const int _dasResetTime = 17;
+  static const int _dasVelocityReset = 250;
 
-  int dasLeftRightPollingTime = 0;
-  int dasLeftRightChargedTime = 0;
-  int dasLeftRightVelocityTime = 250;
+  int _dasLeftRightPollingTime = 0;
+  int _dasLeftRightChargedTime = 0;
+  int _dasLeftRightVelocityTime = _dasVelocityReset;
 
-  int dasRotatePollingTime = 0;
-  int dasRotateChargedTime = 0;
-  int dasRotateVelocityTime = 250;
+  int _dasRotatePollingTime = 0;
+  int _dasRotateChargedTime = 0;
+  int _dasRotateVelocityTime = _dasVelocityReset;
   
-  int dasDownPollingTime = 0;
-  int dasDownChargedTime = 0;
-  int dasDownVelocityTime = 250;
+  int _dasDownPollingTime = 0;
+  int _dasDownChargedTime = 0;
+  int _dasDownVelocityTime = _dasVelocityReset;
 
-  bool isHardDropPressed = false;
-  bool isHoldPressed = false;
-  bool isResetPressed = false;
-  bool isLeftPressed = false;
-  bool isRightPressed = false;
-  bool isDownPressed = false;
-  bool isRotateRightPressed = false;
-  bool isRotateLeftPressed = false;
-  bool isFlipPressed = false;
-  bool isPausedPressed = false;
+  bool _isHardDropPressed = false;
+  bool _isHoldPressed = false;
+  bool _isResetPressed = false;
+  bool _isLeftPressed = false;
+  bool _isRightPressed = false;
+  bool _isDownPressed = false;
+  bool _isRotateRightPressed = false;
+  bool _isRotateLeftPressed = false;
+  bool _isFlipPressed = false;
+  bool _isPausedPressed = false;
   
-  bool wasLeftPressedLastTime = false;
-  bool wasRightPressedLastTime = false;
-  bool wasDownPressedLastTime = false;
-  bool wasRotateRightPressedLastTime = false;
-  bool wasRotateLeftPressedLastTime = false;
-  bool wasFlipPressedLastTime = false;
-  bool wasResetPressedLastTime = false;
-  bool wasHoldPressedLastTime = false;
-  bool wasHardDropPressedLastTime = false;
-
-  int lastKeyPressed = 0;
-  Stopwatch globalTimer = Stopwatch();
+  bool _wasLeftPressedLastTime = false;
+  bool _wasRightPressedLastTime = false;
+  bool _wasDownPressedLastTime = false;
+  bool _wasResetPressedLastTime = false;
+  bool _wasHoldPressedLastTime = false;
+  bool _wasHardDropPressedLastTime = false;
+  bool _wasRotateRightPressedLastTime = false;
+  bool _wasRotateLeftPressedLastTime = false;
+  bool _wasFlipPressedLastTime = false;
 
   late Function hardDrop;
   late Function(bool) down;
@@ -55,131 +53,126 @@ class GameControls {
   late Function reset;
   late Function hold;
 
-  GameControls({required this.options}) {
-    globalTimer.start();
-  }
-
+  GameControls({required this.options});
   
   void checkForKeyPresses(GameState gameState, Piece currentPiece) {
     Iterable<int> keysPressed = HardwareKeyboard.instance.physicalKeysPressed.map((x) => x.usbHidUsage);
 
-    isResetPressed = keysPressed.where((int x) => x == options.resetBind.key.usbHidUsage).isNotEmpty;
-    isRightPressed = keysPressed.where((int x) => x == options.moveRightBind.key.usbHidUsage).isNotEmpty;
-    isLeftPressed = keysPressed.where((int x) => x == options.moveLeftBind.key.usbHidUsage).isNotEmpty;
-    isRotateLeftPressed = keysPressed.where((int x) => x == options.rotateLeftBind.key.usbHidUsage).isNotEmpty;
-    isRotateRightPressed = keysPressed.where((int x) => x == options.rotateRightBind.key.usbHidUsage).isNotEmpty;
-    isFlipPressed = keysPressed.where((int x) => x == options.flipBind.key.usbHidUsage).isNotEmpty;
-    isHardDropPressed = keysPressed.where((int x) => x == options.hardDropBind.key.usbHidUsage).isNotEmpty;
-    isHoldPressed = keysPressed.where((int x) => x == options.holdBind.key.usbHidUsage).isNotEmpty;
-    isDownPressed = keysPressed.where((int x) => x == options.dropBind.key.usbHidUsage).isNotEmpty;
-    isPausedPressed = keysPressed.where((int x) => x == options.pauseBind.key.usbHidUsage).isNotEmpty;
+    _isResetPressed = keysPressed.where((int x) => x == options.resetBind.key.usbHidUsage).isNotEmpty;
+    _isRightPressed = keysPressed.where((int x) => x == options.moveRightBind.key.usbHidUsage).isNotEmpty;
+    _isLeftPressed = keysPressed.where((int x) => x == options.moveLeftBind.key.usbHidUsage).isNotEmpty;
+    _isRotateLeftPressed = keysPressed.where((int x) => x == options.rotateLeftBind.key.usbHidUsage).isNotEmpty;
+    _isRotateRightPressed = keysPressed.where((int x) => x == options.rotateRightBind.key.usbHidUsage).isNotEmpty;
+    _isFlipPressed = keysPressed.where((int x) => x == options.flipBind.key.usbHidUsage).isNotEmpty;
+    _isHardDropPressed = keysPressed.where((int x) => x == options.hardDropBind.key.usbHidUsage).isNotEmpty;
+    _isHoldPressed = keysPressed.where((int x) => x == options.holdBind.key.usbHidUsage).isNotEmpty;
+    _isDownPressed = keysPressed.where((int x) => x == options.dropBind.key.usbHidUsage).isNotEmpty;
+    _isPausedPressed = keysPressed.where((int x) => x == options.pauseBind.key.usbHidUsage).isNotEmpty;
     
-    if (!wasResetPressedLastTime && isResetPressed) {
+    if (!_wasResetPressedLastTime && _isResetPressed) {
       reset();
-      wasResetPressedLastTime = isResetPressed;
+      _wasResetPressedLastTime = _isResetPressed;
       return;
     }
 
-    if (gameState == GameState.playing) {
+    if (!_wasHardDropPressedLastTime && _isHardDropPressed) {
+      hardDrop();
+      _wasHardDropPressedLastTime = true;
+      return;
+    }
 
-      if (!wasHardDropPressedLastTime && isHardDropPressed) {
-        hardDrop();
-        wasHardDropPressedLastTime = true;
-        return;
-      }
+    if (!_wasHoldPressedLastTime && _isHoldPressed) {
+      hold();
+      _wasHoldPressedLastTime = true;
+      return;
+    }
 
-      if (!wasHoldPressedLastTime && isHoldPressed) {
-        hold();
-        wasHoldPressedLastTime = true;
-        return;
-      }
-
-      if (isPausedPressed) {
-        pause();
-        return;
-      }
-      
-      if (globalTimer.elapsedMilliseconds > dasLeftRightPollingTime + dasLeftRightVelocityTime || (!wasRightPressedLastTime && isRightPressed) || (!wasLeftPressedLastTime && isLeftPressed)) {
-        if (isRightPressed) {
-          moveRight();
-          dasLeftRightVelocityTime -= dasAccelerationTime;
-          dasLeftRightVelocityTime = max(dasLeftRightVelocityTime, 34);
-          dasLeftRightPollingTime = globalTimer.elapsedMilliseconds; 
-        }
-        else if (isLeftPressed) {
-          moveLeft();
-          dasLeftRightVelocityTime -= dasAccelerationTime;
-          dasLeftRightVelocityTime = max(dasLeftRightVelocityTime, 34);
-          dasLeftRightPollingTime = globalTimer.elapsedMilliseconds; 
-        }
-      }
-             
-      if (globalTimer.elapsedMilliseconds > dasDownPollingTime + dasDownVelocityTime || (!wasDownPressedLastTime && isDownPressed)) {
-        if (isDownPressed) {
-          down(true);
-          dasDownVelocityTime -= dasAccelerationTime;
-          dasDownVelocityTime = max(dasDownVelocityTime, 34);
-          dasDownPollingTime = globalTimer.elapsedMilliseconds; 
-        }
-      }
-
-      if (globalTimer.elapsedMilliseconds > dasRotatePollingTime + dasRotateVelocityTime) {
-        if (isRotateRightPressed) {
-          rotate(1);
-          dasRotateVelocityTime -= dasAccelerationTime;
-          dasRotateVelocityTime = max(dasRotateVelocityTime, 34);
-          dasRotatePollingTime = globalTimer.elapsedMilliseconds;
-        }
-        else if (isRotateLeftPressed) {
-          rotate(currentPiece.rotations.length - 1);
-          dasRotateVelocityTime -= dasAccelerationTime;
-          dasRotateVelocityTime = max(dasRotateVelocityTime, 34);
-          dasRotatePollingTime = globalTimer.elapsedMilliseconds;
-        }
-        else if (isFlipPressed) {
-          rotate(2);
-          dasRotateVelocityTime -= dasAccelerationTime;
-          dasRotateVelocityTime = max(dasRotateVelocityTime, 34);
-          dasRotatePollingTime = globalTimer.elapsedMilliseconds;
-        }
-      } 
+    if (_isPausedPressed) {
+      pause();
+      return;
     }
     
-    wasRightPressedLastTime = isRightPressed;
-    wasLeftPressedLastTime = isLeftPressed;
-    wasDownPressedLastTime = isDownPressed;
-    wasRotateLeftPressedLastTime = isRotateLeftPressed;
-    wasRotateRightPressedLastTime = isRotateRightPressed;
-    wasFlipPressedLastTime = isFlipPressed;
-    wasHoldPressedLastTime = isHoldPressed;
-    wasHardDropPressedLastTime = isHardDropPressed;
-    wasResetPressedLastTime = isResetPressed;
+    if (HomePage.globalTimer.elapsedMilliseconds > _dasLeftRightPollingTime + _dasLeftRightVelocityTime || (!_wasRightPressedLastTime && _isRightPressed) || (!_wasLeftPressedLastTime && _isLeftPressed)) {
+      print(HomePage.globalTimer.isRunning);
+      if (_isRightPressed) {
+        moveRight();
+        _dasLeftRightVelocityTime -= _dasAccelerationTime;
+        _dasLeftRightVelocityTime = max(_dasLeftRightVelocityTime, 34);
+        _dasLeftRightPollingTime = HomePage.globalTimer.elapsedMilliseconds; 
+      }
+      else if (_isLeftPressed) {
+        moveLeft();
+        _dasLeftRightVelocityTime -= _dasAccelerationTime;
+        _dasLeftRightVelocityTime = max(_dasLeftRightVelocityTime, 34);
+        _dasLeftRightPollingTime = HomePage.globalTimer.elapsedMilliseconds; 
+      }
+    }
+            
+    if (HomePage.globalTimer.elapsedMilliseconds > _dasDownPollingTime + _dasDownVelocityTime || (!_wasDownPressedLastTime && _isDownPressed)) {
+      if (_isDownPressed) {
+        down(true);
+        _dasDownVelocityTime -= _dasAccelerationTime;
+        _dasDownVelocityTime = max(_dasDownVelocityTime, 34);
+        _dasDownPollingTime = HomePage.globalTimer.elapsedMilliseconds; 
+      }
+    }
+
+    if (HomePage.globalTimer.elapsedMilliseconds > _dasRotatePollingTime + _dasRotateVelocityTime || (!_wasFlipPressedLastTime && _isFlipPressed) || (!_wasRotateLeftPressedLastTime && _isRotateLeftPressed) || (!_wasRotateRightPressedLastTime && _isRotateRightPressed)) {
+      if (_isRotateRightPressed) {
+        rotate(1);
+        _dasRotateVelocityTime -= _dasAccelerationTime;
+        _dasRotateVelocityTime = max(_dasRotateVelocityTime, 34);
+        _dasRotatePollingTime = HomePage.globalTimer.elapsedMilliseconds;
+      }
+      else if (_isRotateLeftPressed) {
+        rotate(currentPiece.rotations.length - 1);
+        _dasRotateVelocityTime -= _dasAccelerationTime;
+        _dasRotateVelocityTime = max(_dasRotateVelocityTime, 34);
+        _dasRotatePollingTime = HomePage.globalTimer.elapsedMilliseconds;
+      }
+      else if (_isFlipPressed) {
+        rotate(2);
+        _dasRotateVelocityTime -= _dasAccelerationTime;
+        _dasRotateVelocityTime = max(_dasRotateVelocityTime, 34);
+        _dasRotatePollingTime = HomePage.globalTimer.elapsedMilliseconds;
+      }
+    } 
     
-    if (isLeftPressed || isRightPressed) {
-      dasLeftRightChargedTime = globalTimer.elapsedMilliseconds;
+    _wasRightPressedLastTime = _isRightPressed;
+    _wasLeftPressedLastTime = _isLeftPressed;
+    _wasDownPressedLastTime = _isDownPressed;
+    _wasHoldPressedLastTime = _isHoldPressed;
+    _wasHardDropPressedLastTime = _isHardDropPressed;
+    _wasResetPressedLastTime = _isResetPressed;
+    _wasFlipPressedLastTime = _isFlipPressed;
+    _wasRotateLeftPressedLastTime = _isRotateLeftPressed;
+    _wasRotateRightPressedLastTime = _isRotateRightPressed;
+    
+    if (_isLeftPressed || _isRightPressed) {
+      _dasLeftRightChargedTime = HomePage.globalTimer.elapsedMilliseconds;
     } 
 
-    if (isRotateLeftPressed || isRotateRightPressed || isFlipPressed) {
-      dasRotateChargedTime = globalTimer.elapsedMilliseconds;
+    if (_isRotateLeftPressed || _isRotateRightPressed || _isFlipPressed) {
+      _dasRotateChargedTime = HomePage.globalTimer.elapsedMilliseconds;
     }
 
-    if (isDownPressed) {
-      dasDownChargedTime = globalTimer.elapsedMilliseconds;
+    if (_isDownPressed) {
+      _dasDownChargedTime = HomePage.globalTimer.elapsedMilliseconds;
     }
 
-    if ((globalTimer.elapsedMilliseconds > dasLeftRightChargedTime + dasResetTime)) {
-      dasLeftRightChargedTime = globalTimer.elapsedMilliseconds;
-      dasLeftRightVelocityTime = 250;
+    if ((HomePage.globalTimer.elapsedMilliseconds > _dasLeftRightChargedTime + _dasResetTime)) {
+      _dasLeftRightChargedTime = HomePage.globalTimer.elapsedMilliseconds;
+      _dasLeftRightVelocityTime = _dasVelocityReset;
     }
     
-    if ((globalTimer.elapsedMilliseconds > dasRotateChargedTime + dasResetTime)) {
-      dasRotateChargedTime = globalTimer.elapsedMilliseconds;
-      dasRotateVelocityTime = 250;
+    if ((HomePage.globalTimer.elapsedMilliseconds > _dasRotateChargedTime + _dasResetTime)) {
+      _dasRotateChargedTime = HomePage.globalTimer.elapsedMilliseconds;
+      _dasRotateVelocityTime = _dasVelocityReset;
     }
 
-    if ((globalTimer.elapsedMilliseconds > dasDownChargedTime + dasResetTime)) {
-      dasDownChargedTime = globalTimer.elapsedMilliseconds;
-      dasDownVelocityTime = 250;
+    if ((HomePage.globalTimer.elapsedMilliseconds > _dasDownChargedTime + _dasResetTime)) {
+      _dasDownChargedTime = HomePage.globalTimer.elapsedMilliseconds;
+      _dasDownVelocityTime = _dasVelocityReset;
     }
   }
 }
