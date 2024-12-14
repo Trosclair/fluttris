@@ -7,21 +7,18 @@ import 'package:fluttris/resources/piece.dart';
 
 class GameControls {
   final Options options;
-  static const int _dasAccelerationTime = 68;
-  static const int _dasResetTime = 17;
-  static const int _dasVelocityReset = 250;
 
   int _dasLeftRightPollingTime = 0;
   int _dasLeftRightChargedTime = 0;
-  int _dasLeftRightVelocityTime = _dasVelocityReset;
+  int _dasLeftRightVelocityTime = 0;
 
   int _dasRotatePollingTime = 0;
   int _dasRotateChargedTime = 0;
-  int _dasRotateVelocityTime = _dasVelocityReset;
+  int _dasRotateVelocityTime = 0;
   
   int _dasDownPollingTime = 0;
   int _dasDownChargedTime = 0;
-  int _dasDownVelocityTime = _dasVelocityReset;
+  int _dasDownVelocityTime = 0;
 
   bool _isHardDropPressed = false;
   bool _isHoldPressed = false;
@@ -53,7 +50,11 @@ class GameControls {
   late Function reset;
   late Function hold;
 
-  GameControls({required this.options});
+  GameControls({required this.options}) {
+    _dasLeftRightVelocityTime = options.initialDASVelocity;
+    _dasRotateVelocityTime = options.initialDASVelocity;
+    _dasDownVelocityTime = options.initialDASVelocity;
+  }
   
   void checkForKeyPresses(GameState gameState, Piece currentPiece) {
     Iterable<int> keysPressed = HardwareKeyboard.instance.physicalKeysPressed.map((x) => x.usbHidUsage);
@@ -95,14 +96,14 @@ class GameControls {
     if (HomePage.globalTimer.elapsedMilliseconds > _dasLeftRightPollingTime + _dasLeftRightVelocityTime || (!_wasRightPressedLastTime && _isRightPressed) || (!_wasLeftPressedLastTime && _isLeftPressed)) {
       if (_isRightPressed) {
         moveRight();
-        _dasLeftRightVelocityTime -= _dasAccelerationTime;
-        _dasLeftRightVelocityTime = max(_dasLeftRightVelocityTime, 34);
+        _dasLeftRightVelocityTime -= options.dasAccelerationTime;
+        _dasLeftRightVelocityTime = max(_dasLeftRightVelocityTime, options.maxVelocity);
         _dasLeftRightPollingTime = HomePage.globalTimer.elapsedMilliseconds; 
       }
       else if (_isLeftPressed) {
         moveLeft();
-        _dasLeftRightVelocityTime -= _dasAccelerationTime;
-        _dasLeftRightVelocityTime = max(_dasLeftRightVelocityTime, 34);
+        _dasLeftRightVelocityTime -= options.dasAccelerationTime;
+        _dasLeftRightVelocityTime = max(_dasLeftRightVelocityTime, options.maxVelocity);
         _dasLeftRightPollingTime = HomePage.globalTimer.elapsedMilliseconds; 
       }
     }
@@ -110,8 +111,8 @@ class GameControls {
     if (HomePage.globalTimer.elapsedMilliseconds > _dasDownPollingTime + _dasDownVelocityTime || (!_wasDownPressedLastTime && _isDownPressed)) {
       if (_isDownPressed) {
         down(true);
-        _dasDownVelocityTime -= _dasAccelerationTime;
-        _dasDownVelocityTime = max(_dasDownVelocityTime, 34);
+        _dasDownVelocityTime -= options.dasAccelerationTime;
+        _dasDownVelocityTime = max(_dasDownVelocityTime, options.maxVelocity);
         _dasDownPollingTime = HomePage.globalTimer.elapsedMilliseconds; 
       }
     }
@@ -119,20 +120,20 @@ class GameControls {
     if (HomePage.globalTimer.elapsedMilliseconds > _dasRotatePollingTime + _dasRotateVelocityTime || (!_wasFlipPressedLastTime && _isFlipPressed) || (!_wasRotateLeftPressedLastTime && _isRotateLeftPressed) || (!_wasRotateRightPressedLastTime && _isRotateRightPressed)) {
       if (_isRotateRightPressed) {
         rotate(1);
-        _dasRotateVelocityTime -= _dasAccelerationTime;
-        _dasRotateVelocityTime = max(_dasRotateVelocityTime, 34);
+        _dasRotateVelocityTime -= options.dasAccelerationTime;
+        _dasRotateVelocityTime = max(_dasRotateVelocityTime, options.maxVelocity);
         _dasRotatePollingTime = HomePage.globalTimer.elapsedMilliseconds;
       }
       else if (_isRotateLeftPressed) {
         rotate(currentPiece.rotations.length - 1);
-        _dasRotateVelocityTime -= _dasAccelerationTime;
-        _dasRotateVelocityTime = max(_dasRotateVelocityTime, 34);
+        _dasRotateVelocityTime -= options.dasAccelerationTime;
+        _dasRotateVelocityTime = max(_dasRotateVelocityTime, options.maxVelocity);
         _dasRotatePollingTime = HomePage.globalTimer.elapsedMilliseconds;
       }
       else if (_isFlipPressed) {
         rotate(2);
-        _dasRotateVelocityTime -= _dasAccelerationTime;
-        _dasRotateVelocityTime = max(_dasRotateVelocityTime, 34);
+        _dasRotateVelocityTime -= options.dasAccelerationTime;
+        _dasRotateVelocityTime = max(_dasRotateVelocityTime, options.maxVelocity);
         _dasRotatePollingTime = HomePage.globalTimer.elapsedMilliseconds;
       }
     } 
@@ -159,19 +160,23 @@ class GameControls {
       _dasDownChargedTime = HomePage.globalTimer.elapsedMilliseconds;
     }
 
-    if ((HomePage.globalTimer.elapsedMilliseconds > _dasLeftRightChargedTime + _dasResetTime)) {
+    if ((HomePage.globalTimer.elapsedMilliseconds > _dasLeftRightChargedTime + options.dasResetTime)) {
       _dasLeftRightChargedTime = HomePage.globalTimer.elapsedMilliseconds;
-      _dasLeftRightVelocityTime = _dasVelocityReset;
+      _dasLeftRightVelocityTime = options.initialDASVelocity;
     }
     
-    if ((HomePage.globalTimer.elapsedMilliseconds > _dasRotateChargedTime + _dasResetTime)) {
+    if ((HomePage.globalTimer.elapsedMilliseconds > _dasRotateChargedTime + options.dasResetTime)) {
       _dasRotateChargedTime = HomePage.globalTimer.elapsedMilliseconds;
-      _dasRotateVelocityTime = _dasVelocityReset;
+      _dasRotateVelocityTime = options.initialDASVelocity;
     }
 
-    if ((HomePage.globalTimer.elapsedMilliseconds > _dasDownChargedTime + _dasResetTime)) {
+    if ((HomePage.globalTimer.elapsedMilliseconds > _dasDownChargedTime + options.dasResetTime)) {
       _dasDownChargedTime = HomePage.globalTimer.elapsedMilliseconds;
-      _dasDownVelocityTime = _dasVelocityReset;
+      _dasDownVelocityTime = options.initialDASVelocity;
     }
+  }
+
+  void resetDownDASVelocity() {
+    _dasDownVelocityTime = options.initialDASVelocity;
   }
 }

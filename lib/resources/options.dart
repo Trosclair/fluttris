@@ -19,6 +19,12 @@ class Options extends Game with KeyboardEvents {
   String displayName = '';
   String userID = '';
 
+  /// DAS Configuration
+  int maxVelocity = 34;
+  int initialDASVelocity = 250;
+  int dasResetTime = 17;
+  int dasAccelerationTime = 68;
+
   BuildContext? context;
   Function(PhysicalKeyboardKey)? onKeyPress;
   final TextPaint _reg = TextPaint(style: TextStyle(fontSize: 12, color: BasicPalette.white.color));
@@ -100,6 +106,11 @@ class Options extends Game with KeyboardEvents {
     options.displayName = (await Preferences.getPreferences()).getString('displayName') ?? '';
     options.displayName = (await Preferences.getPreferences()).getString('userID') ?? '';
 
+    options.dasAccelerationTime = (await Preferences.getPreferences()).getInt('dasAccelerationTime') ?? 68;
+    options.dasResetTime = (await Preferences.getPreferences()).getInt('dasResetTime') ?? 17;
+    options.initialDASVelocity = (await Preferences.getPreferences()).getInt('initialDASVelocity') ?? 250;
+    options.maxVelocity = (await Preferences.getPreferences()).getInt('maxVelocity') ?? 34;
+
     return options;
   }
 
@@ -114,6 +125,10 @@ class Options extends Game with KeyboardEvents {
 
     saveSuccessful &= await _setDisplayName();
     saveSuccessful &= await _setUserID();
+    saveSuccessful &= await _setDASAccelerationTime();
+    saveSuccessful &= await _setDASResetTime();
+    saveSuccessful &= await _setInitialDASVelocity();
+    saveSuccessful &= await _setMaxVelocity();
 
     return saveSuccessful;
   }
@@ -128,5 +143,21 @@ class Options extends Game with KeyboardEvents {
   
   Future<bool> _setUserID() async {
     return (await Preferences.getPreferences()).setString('userID', userID);
+  }
+  
+  Future<bool> _setDASAccelerationTime() async {
+    return (await Preferences.getPreferences()).setInt('dasAccelerationTime', dasAccelerationTime);
+  }
+  
+  Future<bool> _setDASResetTime() async {
+    return (await Preferences.getPreferences()).setInt('dasResetTime', dasResetTime);
+  }
+  
+  Future<bool> _setInitialDASVelocity() async {
+    return (await Preferences.getPreferences()).setInt('initialDASVelocity', initialDASVelocity);
+  }
+  
+  Future<bool> _setMaxVelocity() async {
+    return (await Preferences.getPreferences()).setInt('maxVelocity', maxVelocity);
   }
 }

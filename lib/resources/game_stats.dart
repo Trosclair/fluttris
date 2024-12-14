@@ -38,7 +38,7 @@ class GameStats {
         tSpinDouble++;
       }
       else {
-        tSpinDouble++;
+        doubles++;
       }
     }
     else if (linesCleared == 3) {

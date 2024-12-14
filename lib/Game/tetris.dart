@@ -422,6 +422,8 @@ class Tetris extends FlameGame with HasPerformanceTracker {
     _commitPieceToBoard();
     // check for lines to remove.
     _removeLines();
+    // Reset down DAS incase user is holding down down.
+    gameControls.resetDownDASVelocity();
     // Move next pieces
     _currentPiece = _nextPiece;
     _nextPiece = _nextPiece1;
