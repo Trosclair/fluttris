@@ -6,7 +6,7 @@ import 'package:fluttris/resources/options.dart';
 import 'package:fluttris/resources/piece.dart';
 
 class GameControls {
-  final Options options;
+  late Options _options;
 
   int _dasLeftRightPollingTime = 0;
   int _dasLeftRightChargedTime = 0;
@@ -50,25 +50,26 @@ class GameControls {
   late Function reset;
   late Function hold;
 
-  GameControls({required this.options}) {
-    _dasLeftRightVelocityTime = options.initialDASVelocity;
-    _dasRotateVelocityTime = options.initialDASVelocity;
-    _dasDownVelocityTime = options.initialDASVelocity;
+  GameControls() {
+    _options = Options.getOptions();
+    _dasLeftRightVelocityTime = _options.initialDASVelocity;
+    _dasRotateVelocityTime = _options.initialDASVelocity;
+    _dasDownVelocityTime = _options.initialDASVelocity;
   }
   
   void checkForKeyPresses(GameState gameState, Piece currentPiece) {
     Iterable<int> keysPressed = HardwareKeyboard.instance.physicalKeysPressed.map((x) => x.usbHidUsage);
 
-    _isResetPressed = keysPressed.where((int x) => x == options.resetBind.key.usbHidUsage).isNotEmpty;
-    _isRightPressed = keysPressed.where((int x) => x == options.moveRightBind.key.usbHidUsage).isNotEmpty;
-    _isLeftPressed = keysPressed.where((int x) => x == options.moveLeftBind.key.usbHidUsage).isNotEmpty;
-    _isRotateLeftPressed = keysPressed.where((int x) => x == options.rotateLeftBind.key.usbHidUsage).isNotEmpty;
-    _isRotateRightPressed = keysPressed.where((int x) => x == options.rotateRightBind.key.usbHidUsage).isNotEmpty;
-    _isFlipPressed = keysPressed.where((int x) => x == options.flipBind.key.usbHidUsage).isNotEmpty;
-    _isHardDropPressed = keysPressed.where((int x) => x == options.hardDropBind.key.usbHidUsage).isNotEmpty;
-    _isHoldPressed = keysPressed.where((int x) => x == options.holdBind.key.usbHidUsage).isNotEmpty;
-    _isDownPressed = keysPressed.where((int x) => x == options.dropBind.key.usbHidUsage).isNotEmpty;
-    _isPausedPressed = keysPressed.where((int x) => x == options.pauseBind.key.usbHidUsage).isNotEmpty;
+    _isResetPressed = keysPressed.where((int x) => x == _options.resetBind.key.usbHidUsage).isNotEmpty;
+    _isRightPressed = keysPressed.where((int x) => x == _options.moveRightBind.key.usbHidUsage).isNotEmpty;
+    _isLeftPressed = keysPressed.where((int x) => x == _options.moveLeftBind.key.usbHidUsage).isNotEmpty;
+    _isRotateLeftPressed = keysPressed.where((int x) => x == _options.rotateLeftBind.key.usbHidUsage).isNotEmpty;
+    _isRotateRightPressed = keysPressed.where((int x) => x == _options.rotateRightBind.key.usbHidUsage).isNotEmpty;
+    _isFlipPressed = keysPressed.where((int x) => x == _options.flipBind.key.usbHidUsage).isNotEmpty;
+    _isHardDropPressed = keysPressed.where((int x) => x == _options.hardDropBind.key.usbHidUsage).isNotEmpty;
+    _isHoldPressed = keysPressed.where((int x) => x == _options.holdBind.key.usbHidUsage).isNotEmpty;
+    _isDownPressed = keysPressed.where((int x) => x == _options.dropBind.key.usbHidUsage).isNotEmpty;
+    _isPausedPressed = keysPressed.where((int x) => x == _options.pauseBind.key.usbHidUsage).isNotEmpty;
     
     if (!_wasResetPressedLastTime && _isResetPressed) {
       reset();
@@ -96,14 +97,14 @@ class GameControls {
     if (HomePage.globalTimer.elapsedMilliseconds > _dasLeftRightPollingTime + _dasLeftRightVelocityTime || (!_wasRightPressedLastTime && _isRightPressed) || (!_wasLeftPressedLastTime && _isLeftPressed)) {
       if (_isRightPressed) {
         moveRight();
-        _dasLeftRightVelocityTime -= options.dasAccelerationTime;
-        _dasLeftRightVelocityTime = max(_dasLeftRightVelocityTime, options.maxVelocity);
+        _dasLeftRightVelocityTime -= _options.dasAccelerationTime;
+        _dasLeftRightVelocityTime = max(_dasLeftRightVelocityTime, _options.maxVelocity);
         _dasLeftRightPollingTime = HomePage.globalTimer.elapsedMilliseconds; 
       }
       else if (_isLeftPressed) {
         moveLeft();
-        _dasLeftRightVelocityTime -= options.dasAccelerationTime;
-        _dasLeftRightVelocityTime = max(_dasLeftRightVelocityTime, options.maxVelocity);
+        _dasLeftRightVelocityTime -= _options.dasAccelerationTime;
+        _dasLeftRightVelocityTime = max(_dasLeftRightVelocityTime, _options.maxVelocity);
         _dasLeftRightPollingTime = HomePage.globalTimer.elapsedMilliseconds; 
       }
     }
@@ -111,8 +112,8 @@ class GameControls {
     if (HomePage.globalTimer.elapsedMilliseconds > _dasDownPollingTime + _dasDownVelocityTime || (!_wasDownPressedLastTime && _isDownPressed)) {
       if (_isDownPressed) {
         down(true);
-        _dasDownVelocityTime -= options.dasAccelerationTime;
-        _dasDownVelocityTime = max(_dasDownVelocityTime, options.maxVelocity);
+        _dasDownVelocityTime -= _options.dasAccelerationTime;
+        _dasDownVelocityTime = max(_dasDownVelocityTime, _options.maxVelocity);
         _dasDownPollingTime = HomePage.globalTimer.elapsedMilliseconds; 
       }
     }
@@ -120,20 +121,20 @@ class GameControls {
     if (HomePage.globalTimer.elapsedMilliseconds > _dasRotatePollingTime + _dasRotateVelocityTime || (!_wasFlipPressedLastTime && _isFlipPressed) || (!_wasRotateLeftPressedLastTime && _isRotateLeftPressed) || (!_wasRotateRightPressedLastTime && _isRotateRightPressed)) {
       if (_isRotateRightPressed) {
         rotate(1);
-        _dasRotateVelocityTime -= options.dasAccelerationTime;
-        _dasRotateVelocityTime = max(_dasRotateVelocityTime, options.maxVelocity);
+        _dasRotateVelocityTime -= _options.dasAccelerationTime;
+        _dasRotateVelocityTime = max(_dasRotateVelocityTime, _options.maxVelocity);
         _dasRotatePollingTime = HomePage.globalTimer.elapsedMilliseconds;
       }
       else if (_isRotateLeftPressed) {
         rotate(currentPiece.rotations.length - 1);
-        _dasRotateVelocityTime -= options.dasAccelerationTime;
-        _dasRotateVelocityTime = max(_dasRotateVelocityTime, options.maxVelocity);
+        _dasRotateVelocityTime -= _options.dasAccelerationTime;
+        _dasRotateVelocityTime = max(_dasRotateVelocityTime, _options.maxVelocity);
         _dasRotatePollingTime = HomePage.globalTimer.elapsedMilliseconds;
       }
       else if (_isFlipPressed) {
         rotate(2);
-        _dasRotateVelocityTime -= options.dasAccelerationTime;
-        _dasRotateVelocityTime = max(_dasRotateVelocityTime, options.maxVelocity);
+        _dasRotateVelocityTime -= _options.dasAccelerationTime;
+        _dasRotateVelocityTime = max(_dasRotateVelocityTime, _options.maxVelocity);
         _dasRotatePollingTime = HomePage.globalTimer.elapsedMilliseconds;
       }
     } 
@@ -160,23 +161,23 @@ class GameControls {
       _dasDownChargedTime = HomePage.globalTimer.elapsedMilliseconds;
     }
 
-    if ((HomePage.globalTimer.elapsedMilliseconds > _dasLeftRightChargedTime + options.dasResetTime)) {
+    if ((HomePage.globalTimer.elapsedMilliseconds > _dasLeftRightChargedTime + _options.dasResetTime)) {
       _dasLeftRightChargedTime = HomePage.globalTimer.elapsedMilliseconds;
-      _dasLeftRightVelocityTime = options.initialDASVelocity;
+      _dasLeftRightVelocityTime = _options.initialDASVelocity;
     }
     
-    if ((HomePage.globalTimer.elapsedMilliseconds > _dasRotateChargedTime + options.dasResetTime)) {
+    if ((HomePage.globalTimer.elapsedMilliseconds > _dasRotateChargedTime + _options.dasResetTime)) {
       _dasRotateChargedTime = HomePage.globalTimer.elapsedMilliseconds;
-      _dasRotateVelocityTime = options.initialDASVelocity;
+      _dasRotateVelocityTime = _options.initialDASVelocity;
     }
 
-    if ((HomePage.globalTimer.elapsedMilliseconds > _dasDownChargedTime + options.dasResetTime)) {
+    if ((HomePage.globalTimer.elapsedMilliseconds > _dasDownChargedTime + _options.dasResetTime)) {
       _dasDownChargedTime = HomePage.globalTimer.elapsedMilliseconds;
-      _dasDownVelocityTime = options.initialDASVelocity;
+      _dasDownVelocityTime = _options.initialDASVelocity;
     }
   }
 
   void resetDownDASVelocity() {
-    _dasDownVelocityTime = options.initialDASVelocity;
+    _dasDownVelocityTime = _options.initialDASVelocity;
   }
 }

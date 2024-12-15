@@ -1,39 +1,39 @@
 import 'package:flutter/material.dart';
-import 'package:fluttris/pages/home_page.dart';
-import 'package:fluttris/pages/options_page.dart';
 
-class PausePage extends StatelessWidget {
-  static final String routeName = 'pausePage';
-  final Function resume;
+class MultiplayerMenuPage extends StatelessWidget {
+  static final String routeName = 'multiplayerMenuPage';
 
-  const PausePage({super.key, required this.resume});
+  const MultiplayerMenuPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Center(child: Text('Multiplayer', style: TextStyle(color: Colors.white))),
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+      ),
       body: Container(
         color: Colors.black,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            getMainWindowButton('Resume', () { resume(); Navigator.pop(context); }),
-            getSpaceBox(),
-            getMainWindowButton('Options', () { Navigator.push(context, MaterialPageRoute(builder: (context) => OptionsPage(), settings: RouteSettings(name: OptionsPage.routeName))); }),
-            getSpaceBox(),
-            getMainWindowButton('Quit', () { Navigator.popUntil(context, (Route<dynamic> x) => x.settings.name == HomePage.routeName); }),
+            _getMainWindowButton('Server Browser', () {}),
+            _getSpaceBox(),
+            _getMainWindowButton('Direct Connect', () {}),
           ],
         ),
       ),
     );
   }
-
-  Widget getSpaceBox() {
+  
+  Widget _getSpaceBox() {
     return const SizedBox(
       height: 30,
     );
   }
 
-  Widget getMainWindowButton(String text, VoidCallback clickEvent) {
+  Widget _getMainWindowButton(String text, VoidCallback clickEvent) {
     return Center(
       child: SizedBox(
         width: 200,

@@ -3,6 +3,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttris/game/tetris.dart';
 import 'package:fluttris/resources/control_type.dart';
+import 'package:fluttris/resources/options.dart';
 import 'package:hold_down_button/hold_down_button.dart';
 
 class GamePage extends StatelessWidget {
@@ -26,6 +27,7 @@ class GamePage extends StatelessWidget {
     double dpadButtonSideLength = (sideWidth / 3);
     
     tetris.context = context;
+    Options options = Options.getOptions();
 
     return Scaffold(
       body: Container(
@@ -34,13 +36,13 @@ class GamePage extends StatelessWidget {
         color: Colors.black,
         child: Row(
           children: [
-            tetris.gameControls.options.areTouchControlsInverted ? getMovementControls(sideWidth, height, dpadButtonSideLength) : getRotationControls(sideWidth, height, dpadButtonSideLength),
+            options.areTouchControlsInverted ? getMovementControls(sideWidth, height, dpadButtonSideLength) : getRotationControls(sideWidth, height, dpadButtonSideLength),
             SizedBox(
               width: gameWidth,
               height: height,
               child: GameWidget(game: tetris)
             ),
-            tetris.gameControls.options.areTouchControlsInverted ? getRotationControls(sideWidth, height, dpadButtonSideLength) : getMovementControls(sideWidth, height, dpadButtonSideLength)
+            options.areTouchControlsInverted ? getRotationControls(sideWidth, height, dpadButtonSideLength) : getMovementControls(sideWidth, height, dpadButtonSideLength)
           ],
         ),
       ),

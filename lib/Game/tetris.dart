@@ -242,7 +242,7 @@ class Tetris extends FlameGame with HasPerformanceTracker {
 
   void _pause() {
     _gameState = GameState.pause;
-    Navigator.push(context, MaterialPageRoute(builder: (context) => PausePage(options: gameControls.options, resume: () { _gameState = GameState.start; }), settings: RouteSettings(name: PausePage.routeName)));
+    Navigator.push(context, MaterialPageRoute(builder: (context) => PausePage(resume: () { _gameState = GameState.start; }), settings: RouteSettings(name: PausePage.routeName)));
   }
 
   // Reset the game, so the user can play a new round.

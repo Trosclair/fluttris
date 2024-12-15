@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:fluttris/game/tetris.dart';
 import 'package:fluttris/pages/game_page.dart';
 import 'package:fluttris/resources/game_controls.dart';
-import 'package:fluttris/resources/options.dart';
 
 class LevelSelectPage extends StatelessWidget {
   static final String routeName = 'levelSelectPage';
-  final Options options;
 
-  const LevelSelectPage({super.key, required this.options});
+  const LevelSelectPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +38,7 @@ class LevelSelectPage extends StatelessWidget {
 
     for (int i = 0; i < 30; i++) {
       levels.add(
-        getMainWindowButton(i.toString(), () { Navigator.push(context, MaterialPageRoute(builder: (context) => GamePage(tetris: Tetris(gameControls: GameControls(options: options), seedLevel: i, isOnline: false)), settings: RouteSettings(name: GamePage.routeName))); })
+        getMainWindowButton(i.toString(), () { Navigator.push(context, MaterialPageRoute(builder: (context) => GamePage(tetris: Tetris(gameControls: GameControls(), seedLevel: i, isOnline: false)), settings: RouteSettings(name: GamePage.routeName))); })
       );
     }
 

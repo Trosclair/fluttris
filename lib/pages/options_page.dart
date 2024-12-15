@@ -6,9 +6,8 @@ import 'package:fluttris/resources/options.dart';
 
 class OptionsPage extends StatefulWidget {
   static final String routeName = 'optionsPage';
-  final Options options;
 
-  const OptionsPage({super.key, required this.options});
+  const OptionsPage({super.key});
 
   @override
   State<OptionsPage> createState() => _OptionsPageState();
@@ -16,6 +15,11 @@ class OptionsPage extends StatefulWidget {
 
 class _OptionsPageState extends State<OptionsPage> {
   Widget buttonSelectOverlay = Container();
+  late Options options;
+
+  _OptionsPageState() {
+    options = Options.getOptions();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +31,7 @@ class _OptionsPageState extends State<OptionsPage> {
           title: Center(child: Text('Options', style: TextStyle(color: Colors.white))),
           leading: IconButton(onPressed: () { Navigator.pop(context); }, icon: Icon(Icons.arrow_back, color: Colors.white,)),
           actions: [
-            IconButton(onPressed: widget.options.save, icon: Icon(Icons.save, color: Colors.white,))
+            IconButton(onPressed: options.save, icon: Icon(Icons.save, color: Colors.white,))
           ],
           bottom: TabBar(
             labelColor: Colors.white,
@@ -62,10 +66,10 @@ class _OptionsPageState extends State<OptionsPage> {
               children: [
                 Text("Keyboard DAS Controls:", style: TextStyle(color: Colors.white)),
                 SizedBox(height: 20),
-                _getDASControl('Initial DAS Velocity (ms):', widget.options.initialDASVelocity.toString(), (String s) { if (s.isNotEmpty) widget.options.initialDASVelocity = int.parse(s); }),
-                _getDASControl('DAS Acceleration (ms):', widget.options.dasAccelerationTime.toString(), (String s) { if (s.isNotEmpty) widget.options.dasAccelerationTime = int.parse(s); }),
-                _getDASControl('Max DAS Velocity (ms):', widget.options.maxVelocity.toString(), (String s) { if (s.isNotEmpty) widget.options.maxVelocity = int.parse(s); }),
-                _getDASControl('DAS Reset Time (ms):', widget.options.dasResetTime.toString(), (String s) { if (s.isNotEmpty) widget.options.dasResetTime = int.parse(s); }),
+                _getDASControl('Initial DAS Velocity (ms):', options.initialDASVelocity.toString(), (String s) { if (s.isNotEmpty) options.initialDASVelocity = int.parse(s); }),
+                _getDASControl('DAS Acceleration (ms):', options.dasAccelerationTime.toString(), (String s) { if (s.isNotEmpty) options.dasAccelerationTime = int.parse(s); }),
+                _getDASControl('Max DAS Velocity (ms):', options.maxVelocity.toString(), (String s) { if (s.isNotEmpty) options.maxVelocity = int.parse(s); }),
+                _getDASControl('DAS Reset Time (ms):', options.dasResetTime.toString(), (String s) { if (s.isNotEmpty) options.dasResetTime = int.parse(s); }),
               ],
             ),
           )
@@ -113,7 +117,7 @@ class _OptionsPageState extends State<OptionsPage> {
                   children: [
                     Text("Invert Controls", style: TextStyle(color: Colors.white)),
                     SizedBox(width: 20),
-                    Checkbox(value: widget.options.areTouchControlsInverted, onChanged: _onTouchControlsInversionChanged)
+                    Checkbox(value: options.areTouchControlsInverted, onChanged: _onTouchControlsInversionChanged)
                   ],
                 )
               ],
@@ -140,7 +144,7 @@ class _OptionsPageState extends State<OptionsPage> {
   Widget _getKeyboardBinds(BuildContext context) {
     List<Widget> keyBinds = [];
 
-    for (KeyBind kb in widget.options.keyboardBinds) {
+    for (KeyBind kb in options.keyboardBinds) {
       keyBinds.add(SizedBox(height: 30));
       keyBinds.add(
         Row(
@@ -172,14 +176,14 @@ class _OptionsPageState extends State<OptionsPage> {
   }
 
   void _onChangeKeyBindPressed(KeyBind kb) {
-    widget.options.onKeyPress = (PhysicalKeyboardKey key) 
+    options.onKeyPress = (PhysicalKeyboardKey key) 
     { 
       setState(() {
         kb.key = key; 
       }); 
-      widget.options.onKeyPress = null; 
+      options.onKeyPress = null; 
     };
-    Navigator.push(context, MaterialPageRoute(builder: (context) => BindKeyPage(options: widget.options), settings: RouteSettings(name: BindKeyPage.routeName)));
+    Navigator.push(context, MaterialPageRoute(builder: (context) => BindKeyPage(options: options), settings: RouteSettings(name: BindKeyPage.routeName)));
   }
 
   Widget _getColoredText(String text) {
@@ -189,7 +193,7 @@ class _OptionsPageState extends State<OptionsPage> {
   void _onTouchControlsInversionChanged(bool? value) {
     if (value is bool) {
       setState(() {
-        widget.options.areTouchControlsInverted = value;
+        options.areTouchControlsInverted = value;
       });
     }
   }

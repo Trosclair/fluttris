@@ -8,6 +8,10 @@ import 'package:fluttris/resources/key_bind.dart';
 import 'package:fluttris/resources/preferences.dart';
 
 class Options extends Game with KeyboardEvents {
+  static Options? _options;
+
+  bool areOptionsInitialized = false;
+
   /// Controls
   /// Touch Controls
   bool areTouchControlsInverted = false;
@@ -40,6 +44,14 @@ class Options extends Game with KeyboardEvents {
   late KeyBind pauseBind;
   late KeyBind resetBind;
 
+  static Options getOptions() {
+    return _options!;
+  }
+
+  static Future initializeOptions() async {
+    _options ??= await _getOptions();
+  }
+
   @override
   KeyEventResult onKeyEvent(KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
     super.onKeyEvent(event, keysPressed);
@@ -62,7 +74,7 @@ class Options extends Game with KeyboardEvents {
   @override
   void update(double dt) { }
 
-  static Future<Options> getOptions() async {
+  static Future<Options> _getOptions() async {
     Options options = Options();
 
     options.areTouchControlsInverted = (await Preferences.getPreferences()).getBool('areTouchControlsInverted') ?? false;

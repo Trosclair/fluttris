@@ -2,16 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:fluttris/game/tetris.dart';
 import 'package:fluttris/pages/game_page.dart';
 import 'package:fluttris/pages/level_select_page.dart';
+import 'package:fluttris/pages/multiplayer_menu_page.dart';
 import 'package:fluttris/pages/options_page.dart';
 import 'package:fluttris/resources/game_controls.dart';
-import 'package:fluttris/resources/options.dart';
 
 class HomePage extends StatelessWidget {
   static final String routeName = '/';
   static final Stopwatch globalTimer = Stopwatch();
-  final Options options;
 
-  HomePage({super.key, required this.options}) { globalTimer.start(); }
+  HomePage({super.key}) { globalTimer.start(); }
   
   @override
   Widget build(BuildContext context) {
@@ -21,13 +20,13 @@ class HomePage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _getMainWindowButton('Quick Game', () { Navigator.push(context, MaterialPageRoute(builder: (context) => GamePage(tetris: Tetris(gameControls: GameControls(options: options), seedLevel: 0, isOnline: false)), settings: RouteSettings(name: GamePage.routeName))); }),
+            _getMainWindowButton('Quick Game', () { Navigator.push(context, MaterialPageRoute(builder: (context) => GamePage(tetris: Tetris(gameControls: GameControls(), seedLevel: 0, isOnline: false)), settings: RouteSettings(name: GamePage.routeName))); }),
             _getSpaceBox(),
-            _getMainWindowButton('Level Select', () { Navigator.push(context, MaterialPageRoute(builder: (context) => LevelSelectPage(options: options), settings: RouteSettings(name: LevelSelectPage.routeName))); }),
+            _getMainWindowButton('Level Select', () { Navigator.push(context, MaterialPageRoute(builder: (context) => LevelSelectPage(), settings: RouteSettings(name: LevelSelectPage.routeName))); }),
             _getSpaceBox(),
-            _getMainWindowButton('Multiplayer', () {}),
+            _getMainWindowButton('Multiplayer', () { Navigator.push(context, MaterialPageRoute(builder: (context) => MultiplayerMenuPage(), settings: RouteSettings(name: MultiplayerMenuPage.routeName))); }),
             _getSpaceBox(),
-            _getMainWindowButton('Options', () { Navigator.push(context, MaterialPageRoute(builder: (context) => OptionsPage(options: options), settings: RouteSettings(name: OptionsPage.routeName))); }),
+            _getMainWindowButton('Options', () { Navigator.push(context, MaterialPageRoute(builder: (context) => OptionsPage(), settings: RouteSettings(name: OptionsPage.routeName))); }),
           ],
         ),
       ),
